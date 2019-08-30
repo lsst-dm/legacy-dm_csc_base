@@ -1,0 +1,8 @@
+setupRequired(sconsUtils)
+setupRequired(ts_salobj)
+setupRequired(dm_config_at)
+setupRequired(ctrl_iip)
+
+envPrepend(PATH, ${PRODUCT_DIR}/bin)
+
+envPrepend(PYTHONPATH, ${PRODUCT_DIR}/python)
