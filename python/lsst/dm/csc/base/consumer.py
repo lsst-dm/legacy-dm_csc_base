@@ -55,7 +55,7 @@ class Consumer(object):
     QUEUE = 'text'
     ROUTING_KEY = 'example.text'
 
-    def __init__(self, amqp_url, queue, callback):
+    def __init__(self, amqp_url, parent, queue, callback):
         """Create a new instance of the consumer class, passing in the AMQP
         URL used to connect to RabbitMQ.
 
@@ -68,8 +68,9 @@ class Consumer(object):
         self._closing = False
         self._consumer_tag = None
         self._publisher = None
-        self._url = amqp_url
 
+        self._url = amqp_url
+        self.parent = parent
         self.QUEUE = queue
         self.ROUTING_KEY = queue
 
@@ -97,7 +98,7 @@ class Consumer(object):
         :type unused_connection: pika.SelectConnection
 
         """
-        LOGGER.info('Connection opened')
+        LOGGER.info(f'Connection opened for {self.QUEUE}')
         self.open_channel()
 
     def on_connection_open_error(self, _unused_connection, err):
@@ -109,8 +110,9 @@ class Consumer(object):
         :param Exception err: The error
 
         """
-        LOGGER.error('Connection open failed: %s', err)
-        self.reconnect()
+        LOGGER.error(f'Connection open failed: {err}')
+        self.parent.fault(5071, 'failed to open connection to broker')
+        #self.reconnect()
 
     def add_on_connection_close_callback(self):
         """This method adds an on close callback that will be invoked by pika
@@ -368,10 +370,10 @@ class Consumer(object):
         the IOLoop will be buffered but not processed.
 
         """
-        LOGGER.info('Stopping')
+        LOGGER.info(f'Stopping {self.QUEUE}')
         self._closing = True
         self.stop_consuming()
-        LOGGER.info('Stopped')
+        LOGGER.info(f'Stopped {self.QUEUE}')
 
     def close_connection(self):
         """This method closes the connection to RabbitMQ."""
