@@ -66,4 +66,3 @@ class dm_csc(ConfigurableCsc):
         state = self.state_to_str[self.summary_state]
         if self.scoreboard is not None:
             self.scoreboard.set_state(state)
-        LOGGER.info(f"transitioned to {state}")
