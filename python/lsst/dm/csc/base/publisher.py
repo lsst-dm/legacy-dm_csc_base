@@ -31,7 +31,7 @@ LOGGER = logging.getLogger(__name__)
 
 class Publisher(object):
 
-    def __init__(self, amqp_url, logger_level=LOGGER.info):
+    def __init__(self, amqp_url, parent=None, logger_level=LOGGER.info):
 
         self._connection = None
         self._channel = None
@@ -42,17 +42,31 @@ class Publisher(object):
         self._message_handler = YamlHandler()
         self._stopping = False
 
+        self.parent = parent
         self.logger_level = logger_level
 
     def connect(self):
         self._connection = AsyncioConnection(pika.URLParameters(self._url),
                                              on_open_callback=self.on_connection_open,
-                                             on_close_callback=self.on_connection_closed)
+                                             on_close_callback=self.on_connection_closed,
+                                             on_open_error_callback=self.on_connection_open_error)
 
     def on_connection_open(self, connection):
         LOGGER.info("connection opened")
         self._connection = connection
         self.open_channel()
+
+    def on_connection_open_error(self, _unused_connection, err):
+        """This method is called by pika if the connection to RabbitMQ
+        can't be established.
+
+        :param pika.adapters.asyncio_connection.AsyncioConnection _unused_connection:
+           The connection
+        :param Exception err: The error
+
+        """
+        LOGGER.error(f'Connection open failed: {err}')
+        self.parent.fault(5071, f'Connection open failed: {err}')
 
     def open_channel(self):
         LOGGER.info("creating a new channel")
@@ -79,11 +93,13 @@ class Publisher(object):
             connection - closed object connection
             reason - reason for closure
         """
+        LOGGER.info("on_connection_closed called")
         self._channel = None
         self._connect = None
 
     async def close(self):
-        self._channel.close()
+        if self._channel is not None:
+            self._channel.close()
 
     async def publish_message(self, route_key, msg):
 
@@ -104,8 +120,8 @@ class Publisher(object):
         await self.close()
         LOGGER.info('Stopped')
 
-    def start(self):
+    async def start(self):
         try:
-            self.connect()
+            await self.connect()
         except Exception:
             LOGGER.error('No channel - connection channel is None')
