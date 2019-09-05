@@ -33,6 +33,8 @@ class Publisher(object):
 
     def __init__(self, amqp_url, parent=None, logger_level=LOGGER.info):
 
+        # only emit logging messages from pika and WARNING and above
+        logging.getLogger("pika").setLevel(logging.WARNING)
         self._connection = None
         self._channel = None
         self._url = amqp_url

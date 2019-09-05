@@ -63,6 +63,9 @@ class Consumer(object):
         :param str queue: The queue name that the consumer listens to
 
         """
+
+        # only emit logging messages from pika and WARNING and above
+        logging.getLogger("pika").setLevel(logging.WARNING)
         self._connection = None
         self._channel = None
         self._closing = False
@@ -326,8 +329,9 @@ class Consumer(object):
 
         """
         if self._channel:
-            LOGGER.info('Sending a Basic.Cancel RPC command to RabbitMQ')
-            self._channel.basic_cancel(consumer_tag=self._consumer_tag, callback=self.on_cancelok)
+            if self._channel.is_open:
+                LOGGER.info('Sending a Basic.Cancel RPC command to RabbitMQ')
+                self._channel.basic_cancel(consumer_tag=self._consumer_tag, callback=self.on_cancelok)
 
     def on_cancelok(self, unused_frame):
         """This method is invoked by pika when RabbitMQ acknowledges the

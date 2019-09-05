@@ -28,17 +28,17 @@ LOGGER = logging.getLogger(__name__)
 
 
 class dm_csc(ConfigurableCsc):
-    state_to_str = {
-        State.DISABLED: "disabled",
-        State.ENABLED: "enabled",
-        State.FAULT: "fault",
-        State.OFFLINE: "offline",
-        State.STANDBY: "standby"}
-
     def __init__(self, name, index, schema_path, config_dir, initial_state, initial_simulation_mode):
         super().__init__(name, index=index, schema_path=schema_path, config_dir=config_dir,
                          initial_state=initial_state, initial_simulation_mode=initial_simulation_mode)
         self.scoreboard = None
+        self.state_to_str = {
+            State.DISABLED: "disabled",
+            State.ENABLED: "enabled",
+            State.FAULT: "fault",
+            State.OFFLINE: "offline",
+            State.STANDBY: "standby"}
+
 
     @staticmethod
     def get_config_pkg():
