@@ -41,7 +41,7 @@ class Commander:
 
             try:
                 if self.command == "start":
-                    await arc.cmd_start.set_start(settingsToApply="normal", timeout=self.timeout)
+                    await arc.cmd_start.set_start(settingsToApply=self.settings, timeout=self.timeout)
                 else:
                     cmd = getattr(arc, f"cmd_{self.command}")
                     await cmd.set_start(timeout=self.timeout)
