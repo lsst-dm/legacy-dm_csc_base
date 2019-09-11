@@ -22,7 +22,6 @@
 import asyncio
 import logging
 import pika
-from pprint import pformat
 from lsst.ctrl.iip.YamlHandler import YamlHandler
 from pika.adapters.asyncio_connection import AsyncioConnection
 
@@ -115,7 +114,7 @@ class Publisher(object):
         # here until setup is completed.
         await self.setup_complete_event.wait()
         self._channel.basic_publish(exchange='message', routing_key=route_key, body=encoded_data)
-        self.logger_level('message sent message body is: %s', pformat(str(msg)))
+        self.logger_level(f'message sent message body is: {msg}')
 
     async def stop(self):
         self._stopping = True

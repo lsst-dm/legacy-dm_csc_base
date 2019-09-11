@@ -47,7 +47,7 @@ class Director(base):
         self.base_broker_url = url
 
     def initialize_session(self):
-        self.session_id = str(datetime.datetime.now())
+        self.session_id = str(datetime.datetime.now()).replace(' ','_')
         self.jobnum = 0
 
     def get_session_id(self):
