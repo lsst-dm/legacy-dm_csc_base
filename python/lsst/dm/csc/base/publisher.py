@@ -30,7 +30,7 @@ LOGGER = logging.getLogger(__name__)
 
 class Publisher(object):
 
-    def __init__(self, amqp_url, parent=None, logger_level=LOGGER.info):
+    def __init__(self, amqp_url, csc_parent=None, logger_level=LOGGER.info):
 
         # only emit logging messages from pika and WARNING and above
         logging.getLogger("pika").setLevel(logging.WARNING)
@@ -43,7 +43,7 @@ class Publisher(object):
         self._message_handler = YamlHandler()
         self._stopping = False
 
-        self.parent = parent
+        self.csc_parent = csc_parent
         self.logger_level = logger_level
 
     def connect(self):
@@ -67,7 +67,8 @@ class Publisher(object):
 
         """
         LOGGER.error(f'Connection open failed: {err}')
-        self.parent.fault(5071, f'Connection open failed: {err}')
+        if self.csc_parent is not None:
+            self.csc_parent.fault(5071, f'Connection open failed: {err}')
 
     def open_channel(self):
         LOGGER.info("creating a new channel")
