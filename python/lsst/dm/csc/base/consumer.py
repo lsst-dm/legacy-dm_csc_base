@@ -55,7 +55,7 @@ class Consumer(object):
     QUEUE = 'text'
     ROUTING_KEY = 'example.text'
 
-    def __init__(self, amqp_url, parent, queue, callback):
+    def __init__(self, amqp_url, csc_parent, queue, callback):
         """Create a new instance of the consumer class, passing in the AMQP
         URL used to connect to RabbitMQ.
 
@@ -73,7 +73,7 @@ class Consumer(object):
         self._publisher = None
 
         self._url = amqp_url
-        self.parent = parent
+        self.csc_parent = csc_parent
         self.QUEUE = queue
         self.ROUTING_KEY = queue
 
@@ -114,7 +114,8 @@ class Consumer(object):
 
         """
         LOGGER.error(f'Connection open failed: {err}')
-        self.parent.fault(5071, 'failed to open connection to broker')
+        if self.csc_parent is not None:
+            self.csc_parent.fault(5071, 'failed to open connection to broker')
         #self.reconnect()
 
     def add_on_connection_close_callback(self):
