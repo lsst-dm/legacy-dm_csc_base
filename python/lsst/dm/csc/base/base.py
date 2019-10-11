@@ -1,4 +1,4 @@
-# This file is part of ctrl_iip
+# This file is part of dm_csc_base
 #
 # Developed for the LSST Data Management System.
 # This product includes software developed by the LSST Project
@@ -28,8 +28,7 @@ import signal
 import sys
 import time
 import yaml
-from lsst.ctrl.iip.const import ROOT
-from lsst.ctrl.iip.Credentials import Credentials
+from lsst.dm.csc.base.Credentials import Credentials
 
 LOGGER = logging.getLogger(__name__)
 
@@ -92,7 +91,7 @@ class base:
         filename:  the log file to write to
         """
 
-        log_dir_location = self._config[ROOT].get('LOGGING_DIR', None)
+        log_dir_location = self._config['ROOT'].get('LOGGING_DIR', None)
 
         log_dir = None
 

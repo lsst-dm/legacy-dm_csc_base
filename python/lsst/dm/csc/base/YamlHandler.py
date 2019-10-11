@@ -1,4 +1,4 @@
-# This file is part of ctrl_iip
+# This file is part of dm_csc_base
 #
 # Developed for the LSST Data Management System.
 # This product includes software developed by the LSST Project

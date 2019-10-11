@@ -22,7 +22,7 @@
 import asyncio
 import logging
 import pika
-from lsst.ctrl.iip.YamlHandler import YamlHandler
+from lsst.dm.csc.base.YamlHandler import YamlHandler
 from pika.adapters.asyncio_connection import AsyncioConnection
 
 LOGGER = logging.getLogger(__name__)
