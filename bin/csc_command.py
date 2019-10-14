@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 # This file is part of dm_csc_base
 #
 # Developed for the LSST Data Management System.
