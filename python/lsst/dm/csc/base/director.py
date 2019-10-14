@@ -21,7 +21,7 @@
 
 import datetime
 import logging
-from lsst.ctrl.iip.base import base
+from lsst.dm.csc.base.base import base
 
 LOGGER = logging.getLogger(__name__)
 
