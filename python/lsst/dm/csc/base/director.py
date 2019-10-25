@@ -28,8 +28,8 @@ LOGGER = logging.getLogger(__name__)
 
 class Director(base):
 
-    def __init__(self, config_filename, log_filename):
-        super().__init__(config_filename, log_filename)
+    def __init__(self, name, config_filename, log_filename):
+        super().__init__(name, config_filename, log_filename)
 
         self.initialize_session()
 
