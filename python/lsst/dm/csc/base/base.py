@@ -36,7 +36,8 @@ LOGGER = logging.getLogger(__name__)
 class base:
     """Base class"""
 
-    def __init__(self, filename, log_filename):
+    def __init__(self, name, filename, log_filename):
+        self._name = name
         self._config = self.loadConfigFile(filename)
         self.setupLogging(log_filename)
         self._cred = Credentials('iip_cred.yaml')
@@ -54,12 +55,13 @@ class base:
             config_dir = os.environ["IIP_CONFIG_DIR"]
             config_file = os.path.join(config_dir, config_file)
         else:
-            if "CTRL_IIP_DIR" in os.environ:
-                config_dir = os.environ["CTRL_IIP_DIR"]
+            work_dir = f"{self._name}_DIR"
+            if work_dir in os.environ:
+                config_dir = os.environ[work_dir]
                 config_dir = os.path.join(config_dir, "etc", "config")
                 config_file = os.path.join(config_dir, config_file)
             else:
-                raise Exception("environment variable CTRL_IIP_DIR not defined")
+                raise Exception(f"environment variable {work_dir} not defined")
 
         try:
             f = open(config_file)
