@@ -11,6 +11,7 @@ setup(
     packages=find_namespace_packages(where="python"),
     scripts=["bin/csc_command.py"],
     license="GPL",
+    zip_safe=False,
     project_urls={
         "Bug Tracker": "https://jira.lsstcorp.org/secure/Dashboard.jspa",
         "Source Code": "https://github.com/lsst-dm/dm_csc_base",
