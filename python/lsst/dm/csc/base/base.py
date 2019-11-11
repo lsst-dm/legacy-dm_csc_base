@@ -103,20 +103,26 @@ class base:
             if log_dir_location is not None:
                 log_dir = log_dir_location
             else:
-                log_dir = "/tmp"
-
-        log_file = os.path.join(log_dir, filename)
+                log_dir = None
 
         FORMAT = ('%(levelname) -10s %(asctime)s.%(msecs)03dZ %(name) -30s %(funcName) -35s %(lineno) -5d: %(message)s')
         LOGGER = logging.getLogger(__name__)
         logging.Formatter.converter = time.gmtime
         LOGGER.setLevel(logging.DEBUG)
-        handler = RotatingFileHandler(log_file, maxBytes=2000000, backupCount=10)
-        LOGGER.addHandler(handler)
-        logging.basicConfig(filename=log_file, level=logging.INFO, format=FORMAT, datefmt="%Y-%m-%d %H:%M:%S")
 
-
-        return log_file
+        if log_dir is None:
+            # if we're here, there was no LOGGING_DIR entry in the config file, 
+            # and IIP_LOG_DIR hasn't been set.  Therefore, write to stdout.
+            handler = logging.StreamHandler(sys.stdout)
+            LOGGER.addHandler(handler) 
+            logging.basicConfig(level=logging.INFO, format=FORMAT, datefmt="%Y-%m-%d %H:%M:%S")
+        else: 
+            # if we're here, either LOGGING_DIR was set, or IIP_LOG_DIR was set, so write files to 
+            # the directory that was indicated.
+            log_file = os.path.join(log_dir, filename)
+            handler = RotatingFileHandler(log_file, maxBytes=2000000, backupCount=10)
+            LOGGER.addHandler(handler)
+            logging.basicConfig(filename=log_file, level=logging.INFO, format=FORMAT, datefmt="%Y-%m-%d %H:%M:%S")
 
     def shutdown(self):
         pass
