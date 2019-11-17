@@ -28,7 +28,8 @@ LOGGER = logging.getLogger(__name__)
 
 
 class Director(base):
-
+    """Base class for methods which include transactional information
+    """
     def __init__(self, name, config_filename, log_filename):
         super().__init__(name, config_filename, log_filename)
 
@@ -47,18 +48,23 @@ class Director(base):
 
         self.base_broker_url = url
 
-        self._ack_lock = asyncio.Lock()
         self._ack_id = 0
         self._event_map_lock = asyncio.Lock()
         self._event_map = {}
 
     async def create_event(self, ack_id):
+        """Create an event using the ack_id, and store it in a cache
+        @param ack_id: id to use to identify event
+        """
         evt = asyncio.Event()
         with await self._event_map_lock:
             self._event_map[ack_id] = evt
         return evt
 
     async def clear_event(self, ack_id):
+        """Remove an event from the cache and clear it
+        @param ack_id: id to use to identify event
+        """
         evt = await self.retrieve_event(ack_id)
         if evt is None:
             LOGGER.info(f"Event does not exist: {ack_id}.")
@@ -67,6 +73,9 @@ class Director(base):
         return evt
         
     async def retrieve_event(self, ack_id):
+        """Remove an event from the cache
+        @param ack_id: id to use to identify event
+        """
         evt = None
         with await self._event_map_lock:
             if ack_id in self._event_map:
@@ -74,6 +83,9 @@ class Director(base):
         return evt
 
     async def get_next_ack_id(self):
+        """Create a unique ID
+        @return: a unique id
+        """
         ack_id_val = 0
         with await self._ack_lock:
             self._ack_id += 1
@@ -82,15 +94,25 @@ class Director(base):
         return ack_id
 
     def initialize_session(self):
+        """initialize the session id and jobnum.
+        """
         self.session_id = str(datetime.datetime.now()).replace(' ','_')
         self.jobnum = 0
 
     def get_session_id(self):
+        """Returns the session id
+        @return: the current session id
+        """
         return self.session_id
 
     def get_jobnum(self):
+        """Returns the current job number
+        """
         return self.jobnum
 
     def get_next_jobnum(self):
+        """gets a new job number
+        @return: a job number
+        """
         self.jobnum += 1
         return self.jobnum
