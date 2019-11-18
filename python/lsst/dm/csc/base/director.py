@@ -48,6 +48,7 @@ class Director(base):
 
         self.base_broker_url = url
 
+        self._ack_lock = asyncio.Lock()
         self._ack_id = 0
         self._event_map_lock = asyncio.Lock()
         self._event_map = {}
