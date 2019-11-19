@@ -44,8 +44,11 @@ class Credentials:
     def loadSecureFile(self, cred_file):
         """load a secure YAML file"""
 
-        home = os.environ["HOME"]
-        config_dir = os.path.join(home, ".lsst")
+        if "IIP_CREDENTIAL_DIR" in os.environ:
+            config_dir = os.environ["IIP_CREDENTIAL_DIR"]
+        else:
+            home = os.environ["HOME"]
+            config_dir = os.path.join(home, ".lsst")
         # check for the existence of the configuration directory
         if os.path.isdir(config_dir):
             stat_info = os.stat(config_dir)
