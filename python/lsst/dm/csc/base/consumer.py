@@ -208,7 +208,8 @@ class Consumer(object):
         :param str|unicode exchange_name: The name of the exchange to declare
 
         """
-        self.start_consuming()
+        #self.start_consuming()
+        self._channel.exchange_declare(exchange='message', exchange_type='direct', durable=True, callback=self.on_exchange_declareok)
 
     def on_exchange_declareok(self, unused_frame):
         """Invoked by pika when RabbitMQ has finished the Exchange.Declare RPC
@@ -229,7 +230,7 @@ class Consumer(object):
 
         """
         LOGGER.info('Declaring queue %s', queue_name)
-        self._channel.queue_declare(self.on_queue_declareok, queue_name)
+        self._channel.queue_declare(callback=self.on_queue_declareok, queue=queue_name, durable=True)
 
     def on_queue_declareok(self, method_frame):
         """Method invoked by pika when the Queue.Declare RPC call made in
@@ -243,8 +244,8 @@ class Consumer(object):
         """
         LOGGER.info('Binding %s to %s with %s',
                     self.EXCHANGE, self.QUEUE, self.ROUTING_KEY)
-        self._channel.queue_bind(self.on_bindok, self.QUEUE,
-                                 self.EXCHANGE, self.ROUTING_KEY)
+        self._channel.queue_bind(callback=self.on_bindok, queue=self.QUEUE,
+                                 exchange=self.EXCHANGE, routing_key=self.ROUTING_KEY)
 
     def on_bindok(self, unused_frame):
         """Invoked by pika when the Queue.Bind method has completed. At this
