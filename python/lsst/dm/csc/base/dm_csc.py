@@ -54,11 +54,13 @@ class dm_csc(ConfigurableCsc):
         """
         self.config = config
         LOGGER.info("configuring")
-        self.evt_settingsApplied.set_put(
-            settings="normal",
-            tsXMLVersion=self.config.tsXMLVersion,
-            tsSALVersion=self.config.tsSALVersion,
-            l1dmRepoTag=self.config.l1dmRepoTag
+        self.evt_settingsApplied.set_put(settingsVersion=self.config.settingsVersion)
+        self.evt_softwareVersions.set_put(
+            xmlVersion=self.config.xmlVersion,
+            salVersion=self.config.salVersion,
+            openSpliceVersion=self.config.openSpliceVersion,
+            cscVersion=self.config.cscVersion
+
         )
 
     def report_summary_state(self):
