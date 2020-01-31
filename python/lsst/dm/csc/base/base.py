@@ -42,6 +42,9 @@ class base:
         self.setupLogging(log_filename)
         self._cred = Credentials('iip_cred.yaml')
 
+    def getName(self):
+        return self._name
+
     def loadConfigFile(self, filename):
         """Load configuration file from configuration directory.  The
         default location is $CTRL_IIP_DIR/etc/config.  If the environment
@@ -63,6 +66,7 @@ class base:
             else:
                 raise Exception(f"environment variable {work_dir} not defined")
 
+        print(f"loading {config_file}")
         try:
             f = open(config_file)
         except Exception:
