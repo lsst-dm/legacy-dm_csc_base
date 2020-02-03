@@ -47,6 +47,7 @@ class ArchiveController(base):
         self.archive_ctrl_consume_queue = root['ARCHIVE_CTRL_CONSUME_QUEUE']
         self.camera_name = root['CAMERA_NAME']
         self.archiver_name = root['ARCHIVER_NAME']
+        self.short_name = root['SHORT_NAME']
 
         archive = root['ARCHIVE']
 
@@ -268,7 +269,7 @@ class ArchiveController(base):
 
     def build_file_ingest_request_message(self, msg):
         d = {}
-        d['MSG_TYPE'] = 'FILE_INGEST_REQUEST'
+        d['MSG_TYPE'] = f'{self.short_name}_FILE_INGEST_REQUEST'
         d['CAMERA'] = self.camera_name
         d['ARCHIVER'] = self.archiver_name
         d['OBSID'] = msg['OBSID']
