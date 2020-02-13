@@ -70,8 +70,9 @@ class base:
         try:
             f = open(config_file)
         except Exception:
-            print("Can't open %s" % config_file)
-            sys.exit(10)
+            msg = f"Can't open {config_file}"
+            print(msg)
+            raise FileNotFoundError(msg)
 
         config = None
         try:
@@ -130,12 +131,3 @@ class base:
 
     def shutdown(self):
         pass
-
-    def register_SIGINT_handler(self):
-        signal.signal(signal.SIGINT, self.signal_handler)
-
-    def signal_handler(self, sig, frame):
-        signal.signal(signal.SIGINT, signal.SIG_IGN)
-        LOGGER.info("shutdown signal received")
-        print("shutdown signal received")
-        self.shutdown()

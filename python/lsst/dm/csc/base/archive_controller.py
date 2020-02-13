@@ -48,6 +48,7 @@ class ArchiveController(base):
         self.camera_name = root['CAMERA_NAME']
         self.archiver_name = root['ARCHIVER_NAME']
         self.short_name = root['SHORT_NAME']
+        self._msg_actions = {}
 
         archive = root['ARCHIVE']
 
@@ -117,11 +118,26 @@ class ArchiveController(base):
                                  self.on_message)
         self.consumer.start()
 
+    def stop_consumers(self):
+        LOGGER.info("stopping publishers")
+        if self.consumer is not None:
+            self.consumer.stop()
+            self.consumer = None
+
+    async def stop_connections(self):
+        await self.stop_publishers()
+        self.stop_consumers()
+
     def on_message(self, ch, method, properties, body):
         if 'MSG_TYPE' not in body:
-            LOGGER.info(f'received invalid message: {body}')
-            return
+            msg = f"received invalid message: {body}"
+            LOGGER.warning(msg)
+            raise Exception(msg)
         msg_type = body['MSG_TYPE']
+        if msg_type not in self._msg_actions:
+            msg = f"{msg_type} was not found in msg_action list"
+            LOGGER.warning(msg)
+            raise Exception(msg)
         if msg_type != 'ARCHIVE_HEALTH_CHECK':
             LOGGER.info("received message")
             LOGGER.info(body)
@@ -131,25 +147,25 @@ class ArchiveController(base):
         loop = asyncio.get_event_loop()
         task = loop.create_task(handler(body))
 
-    def build_new_item_ack_message(self, target_dir, data):
+    def build_new_item_ack_message(self, target_dir, incoming_msg):
         d = {}
-        d['MSG_TYPE'] = 'NEW_AT_ARCHIVE_ITEM_ACK'
+        d['MSG_TYPE'] = f'NEW_{self.short_name}_ARCHIVE_ITEM_ACK'
         d['TARGET_DIR'] = target_dir
-        d['ACK_ID'] = data['ACK_ID']
-        d['JOB_NUM'] = data['JOB_NUM']
-        d['IMAGE_ID'] = data['IMAGE_ID']
+        d['ACK_ID'] = incoming_msg['ACK_ID']
+        d['JOB_NUM'] = incoming_msg['JOB_NUM']
+        d['IMAGE_ID'] = incoming_msg['IMAGE_ID']
         d['COMPONENT'] = 'ARCHIVE_CTRL'
-        d['ACK_BOOL'] = "TRUE"
-        d['SESSION_ID'] = data['SESSION_ID']
+        d['ACK_BOOL'] = 'TRUE'
+        d['SESSION_ID'] = incoming_msg['SESSION_ID']
         return d
 
-    def build_health_ack_message(self, data):
+    def build_health_ack_message(self, incoming_msg):
         d = {}
         d['MSG_TYPE'] = "ARCHIVE_HEALTH_CHECK_ACK"
         d['COMPONENT'] = 'ARCHIVE_CTRL'
         d['ACK_BOOL'] = "TRUE"
-        d['ACK_ID'] = data['ACK_ID']
-        d['SESSION_ID'] = data['SESSION_ID']
+        d['ACK_ID'] = incoming_msg['ACK_ID']
+        d['SESSION_ID'] = incoming_msg['SESSION_ID']
         return d
 
     def construct_send_target_dir(self, target_dir):
@@ -170,7 +186,9 @@ class ArchiveController(base):
             try:
                 os.mkdir(final_target_dir, 0o2775)
             except Exception as e:
-                LOGGER.error(f'failure to create {final_target_dir}: {e}')
+                msg = f'failure to create {final_target_dir}: {e}'
+                LOGGER.error(msg)
+                raise Exception(msg)
             os.chmod(final_target_dir, 0o775)
 
         return final_target_dir
@@ -189,21 +207,21 @@ class ArchiveController(base):
         LOGGER.info(ack_msg)
         await self.publisher.publish_message(reply_queue, ack_msg)
 
-    def build_file_transfer_completed_ack(self, data):
-        LOGGER.info(f"data was: {data}")
+    def build_file_transfer_completed_ack(self, incoming_msg):
+        LOGGER.info(f"data was: {incoming_msg}")
         d = {}
         d['MSG_TYPE'] = 'FILE_TRANSFER_COMPLETED_ACK'
         d['COMPONENT'] = 'ARCHIVE_CTRL'
-        d['OBSID'] = data['OBSID']
-        d['FILENAME'] = data['FILENAME']
-        d['JOB_NUM'] = data['JOB_NUM']
-        d['SESSION_ID'] = data['SESSION_ID']
+        d['OBSID'] = incoming_msg['OBSID']
+        d['FILENAME'] = incoming_msg['FILENAME']
+        d['JOB_NUM'] = incoming_msg['JOB_NUM']
+        d['SESSION_ID'] = incoming_msg['SESSION_ID']
         return d
 
-    async def process_file_transfer_completed(self, msg):
-        filename = msg['FILENAME']
-        reply_queue = msg['REPLY_QUEUE']
-        ack_msg = self.build_file_transfer_completed_ack(msg)
+    async def process_file_transfer_completed(self, incoming_msg):
+        filename = incoming_msg['FILENAME']
+        reply_queue = incoming_msg['REPLY_QUEUE']
+        ack_msg = self.build_file_transfer_completed_ack(incoming_msg)
         LOGGER.info(ack_msg)
         await self.publisher.publish_message(reply_queue, ack_msg)
 

@@ -31,6 +31,7 @@ class Scoreboard:
         LOGGER.info(f"Connecting {device} to redis database {db} at host {host}:{port}")
         self.device = device
         self.conn = redis.StrictRedis(host, port, charset='utf-8', db=db, decode_responses=True)
+        self.conn.ping()
 
         self.STATE = "state"
         self.SESSION = "session"

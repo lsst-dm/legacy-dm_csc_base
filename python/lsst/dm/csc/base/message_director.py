@@ -57,10 +57,16 @@ class MessageDirector(Director):
         self.FWDR_END_READOUT = None
         self.FWDR_HEADER_READY = None
 
+        self.OODS_CONSUME_QUEUE = None
+        self.OODS_PUBLISH_QUEUE = None
+        self.ARCHIVE_CTRL_PUBLISH_QUEUE = None
+        self.ARCHIVE_CTRL_CONSUME_QUEUE = None
+        self.TELEMETRY_QUEUE = None
+
     def config_val(self, config, key):
         if key in config:
             return config[key]
-        LOGGER.warn(f'configuration key {key} not found; setting to None')
+        LOGGER.warning(f'configuration key {key} not found; setting to None')
         return None
 
     def configure(self):
