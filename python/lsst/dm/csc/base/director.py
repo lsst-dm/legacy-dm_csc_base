@@ -58,7 +58,7 @@ class Director(base):
         @param ack_id: id to use to identify event
         """
         evt = asyncio.Event()
-        with await self._event_map_lock:
+        async with self._event_map_lock:
             self._event_map[ack_id] = evt
         return evt
 
@@ -78,7 +78,7 @@ class Director(base):
         @param ack_id: id to use to identify event
         """
         evt = None
-        with await self._event_map_lock:
+        async with self._event_map_lock:
             if ack_id in self._event_map:
                 evt = self._event_map.pop(ack_id)
         return evt
@@ -88,7 +88,7 @@ class Director(base):
         @return: a unique id
         """
         ack_id_val = 0
-        with await self._ack_lock:
+        async with self._ack_lock:
             self._ack_id += 1
             ack_id_val = self._ack_id
         ack_id = f"{self.session_id}_{ack_id_val}"

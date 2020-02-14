@@ -1,0 +1,43 @@
+# Configuration settings for TSArchiver
+ROOT:
+  LOGGING_DIR: /tmp
+  REDIS_HOST: madeup.madeup
+  ARCHIVER_REDIS_DB: 1
+  FORWARDER_PUBLISH_QUEUE: test_foreman_ack_publish
+  OODS_PUBLISH_QUEUE: test_publish_to_oods
+  OODS_CONSUME_QUEUE: oods_publish_to_test
+  ARCHIVE_CTRL_PUBLISH_QUEUE: archive_ctrl_publish
+  ARCHIVE_CTRL_CONSUME_QUEUE: archive_ctrl_consume
+  TELEMETRY_QUEUE: telemetry_queue
+  CAMERA_NAME: LATISS
+  ARCHIVER_NAME: TestArchiver
+  SHORT_NAME: TS
+
+  ARCHIVE_CONTROLLER_NAME: ts_archive_controller
+  ASSOCIATION_KEY: tsarchiver_association
+  # message types
+  FWDR_HEALTH_CHECK_ACK: TS_FWDR_HEALTH_CHECK_ACK
+  FILE_INGEST_REQUEST: TS_FILE_INGEST_REQUEST
+  NEW_ARCHIVE_ITEM: NEW_TS_ARCHIVE_ITEM
+  FWDR_XFER_PARAMS: TS_FWDR_XFER_PARAMS
+  FWDR_END_READOUT: TS_FWDR_END_READOUT
+  FWDR_HEADER_READY: TS_FWDR_HEADER_READY
+
+  ACK_TIMEOUT: 10
+
+  CSC:
+    BEACON:
+        SECONDS_TO_EXPIRE: 10
+        SECONDS_TO_UPDATE: 3
+
+  BASE_BROKER_ADDR: 141.142.238.15:5672/%2ftest_ts
+  ARCHIVE:
+    ARCHIVE_LOGIN: test
+    ARCHIVE_IP: 141.142.238.15
+    CHECKSUM_TYPE: MD5
+    FORWARDER_STAGING: /tmp/forwarder
+    OODS_STAGING: /tmp/oods
+    DBB_STAGING: /tmp/dbb
+  ATS:
+    WFS_RAFT: "00"
+    WFS_CCD: [ "00" ]

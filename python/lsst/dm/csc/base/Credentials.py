@@ -59,7 +59,7 @@ class Credentials:
                 msg = "directory '%s' is unsecure. Run 'chmod 700 %s'." % (config_dir, config_dir)
                 print(msg)
                 LOGGER.info(msg)
-                sys.exit(100)
+                raise PermissionError(msg)
             filename = os.path.join(config_dir, cred_file)
             # check that the credential file exists
             if os.path.isfile(filename):
@@ -70,20 +70,20 @@ class Credentials:
                     msg = "file '%s' is unsecure.  Run 'chmod 600 %s'." % (filename, filename)
                     print(msg)
                     LOGGER.info(msg)
+                    raise PermissionError(msg)
                 else:
                     # after all that checking, load the YAML file containing the secure file
                     return self.loadYamlFile(filename)
             else:
-                msg = "can not find creditials file '%s'." % filename
-                print(msg)
+                msg = "can not find credentials file '%s'." % filename
                 LOGGER.info(msg)
-            sys.exit(100)
+                raise FileNotFoundError(msg)
         else:
             path = os.path.join(config_dir, cred_file)
-            msg = "can not read creditials file '%s'." % path
+            msg = "can not read credentials file '%s'." % path
             print(msg)
             LOGGER.info(msg)
-        sys.exit(100)
+            raise PermissionError(msg)
 
     def loadYamlFile(self, config_file):
         try:
@@ -92,7 +92,7 @@ class Credentials:
             msg = "Can't open %s" % config_file
             print(msg)
             LOGGER.info(msg)
-            sys.exit(10)
+            raise PermissionError(msg)
 
         config = None
         try:

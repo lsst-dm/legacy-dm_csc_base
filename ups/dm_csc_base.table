@@ -1,7 +1,6 @@
 setupRequired(sconsUtils)
 setupRequired(ts_salobj)
-setupRequired(dm_config_at)
-setupRequired(ctrl_iip)
+#setupRequired(dm_config_at)
 
 envPrepend(PATH, ${PRODUCT_DIR}/bin)
 

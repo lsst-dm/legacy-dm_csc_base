@@ -1,4 +1,4 @@
-# This file is part of dm_ATArchiver
+# This file is part of dm_csc_base
 #
 # Developed for the LSST Data Management System.
 # This product includes software developed by the LSST Project
@@ -19,31 +19,23 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import asyncio
 import logging
-import redis
 
 LOGGER = logging.getLogger(__name__)
 
+class Beacon:
+    def __init__(self, evt, scoreboard):
+        self.evt = evt
+        self.evt.clear()
+        self.scoreboard = scoreboard
 
-class Scoreboard:
+    async def ping(self, forwarder_info, seconds_to_expire, seconds_to_update):
+        while True:
+            if self.evt.is_set(): # if this is set, we were asked to shut down.
+                LOGGER.info(f"stopping beacon for {forwarder_info.hostname}")
+                self.scoreboard.delete_forwarder_association()
+                return
+            self.scoreboard.set_forwarder_association(forwarder_info.hostname,seconds_to_expire)
+            await asyncio.sleep(seconds_to_update)
 
-    def __init__(self, device, db, host, port=6379):
-        LOGGER.info(f"Connecting {device} to redis database {db} at host {host}:{port}")
-        self.device = device
-        self.conn = redis.StrictRedis(host, port, charset='utf-8', db=db, decode_responses=True)
-        self.conn.ping()
-
-        self.STATE = "state"
-        self.SESSION = "session"
-
-    def get_state(self):
-        return self.conn.hget(self.device, self.STATE)
-
-    def set_state(self, state):
-        self.conn.hset(self.device, self.STATE, state)
-
-    def get_session(self):
-        return self.conn.hget(self.device, self.SESSION)
-
-    def set_session(self, session):
-        self.conn.hset(self.device, self.SESSION, session)

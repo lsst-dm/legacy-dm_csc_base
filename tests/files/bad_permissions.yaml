@@ -1,0 +1,4 @@
+rabbitmq_users:
+    service_user: fakeuser
+    # this is for 238.15
+    service_passwd: fakepass

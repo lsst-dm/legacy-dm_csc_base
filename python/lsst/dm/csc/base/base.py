@@ -42,6 +42,9 @@ class base:
         self.setupLogging(log_filename)
         self._cred = Credentials('iip_cred.yaml')
 
+    def getName(self):
+        return self._name
+
     def loadConfigFile(self, filename):
         """Load configuration file from configuration directory.  The
         default location is $CTRL_IIP_DIR/etc/config.  If the environment
@@ -63,11 +66,13 @@ class base:
             else:
                 raise Exception(f"environment variable {work_dir} not defined")
 
+        print(f"loading {config_file}")
         try:
             f = open(config_file)
         except Exception:
-            print("Can't open %s" % config_file)
-            sys.exit(10)
+            msg = f"Can't open {config_file}"
+            print(msg)
+            raise FileNotFoundError(msg)
 
         config = None
         try:
@@ -126,12 +131,3 @@ class base:
 
     def shutdown(self):
         pass
-
-    def register_SIGINT_handler(self):
-        signal.signal(signal.SIGINT, self.signal_handler)
-
-    def signal_handler(self, sig, frame):
-        signal.signal(signal.SIGINT, signal.SIG_IGN)
-        LOGGER.info("shutdown signal received")
-        print("shutdown signal received")
-        self.shutdown()

@@ -55,6 +55,3 @@ class YamlHandler:
     def decode_message(self, body):
         tmpdict = yaml.safe_load(body)
         return tmpdict
-
-    def print_yaml(self, body):
-        print(str(body))

@@ -19,32 +19,22 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import logging
-import redis
+import asyncio
 
-LOGGER = logging.getLogger(__name__)
+class Watcher:
+    def __init__(self, evt, parent, scoreboard):
+        self.evt = evt
+        self.evt.clear()
+        self.parent = parent
+        self.scoreboard = scoreboard
 
-
-class Fileboard:
-
-    def __init__(self, db, host, port=6379):
-        LOGGER.info(f"Connecting to redis database {db} at host {host}:{port}")
-        self.todo = "todo"
-        self.completed = "completed"
-        self.conn = redis.StrictRedis(host, port, charset='utf-8', db=db, decode_responses=True)
-
-    def push_todo(self, camera, archiver, obsid, filename):
-        d = {'camera': camera, 'archiver': archiver, 'obsid': image_name, 'filename': filename}
-        self.conn.rpush(self.todo, d)
-
-    def pop_todo(self, timeout=0):
-        return self.conn.blpop(self.todo, timeout)
-
-if __name__ == "__main__":
-    board = Fileboard(10, "localhost")
-    board.push_todo("LATISS", "ATArchiver", "myfile", "/tmp/myfile")
-    d = board.pop_todo()
-    print(d[1])
-    d = board.pop_todo(5)
-    print(d)
-
+    async def peek(self, forwarder_key, seconds_until_next_peek):
+        while True:
+            if self.evt.is_set():  # if this is set, we were asked to shut down.
+                return
+            if self.scoreboard.check_forwarder_presence(forwarder_key) is None:
+                code = 5755
+                report = "Forwarder is does not appear to be alive.  Going into fault state."
+                self.parent.call_fault(code=code, report=report)
+                return
+            await asyncio.sleep(seconds_until_next_peek)
