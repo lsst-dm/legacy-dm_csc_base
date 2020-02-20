@@ -169,10 +169,10 @@ class ArchiveController(base):
         return d
 
     def construct_send_target_dir(self, target_dir):
-        today = datetime.datetime.now()
-        day_string = today.date()
+        observing_time = datetime.datetime.now(datetime.timezone.utc)  - datetime.timedelta(hours=12)
+        day_string = str(observing_time.date())
 
-        final_target_dir = target_dir + "/" + str(day_string) + "/"
+        final_target_dir = f"{target_dir}/{day_string}/"
 
         # This code allows two users belonging to the same group (such as ARCHIVE)
         # to both create and write to a specific directory.
