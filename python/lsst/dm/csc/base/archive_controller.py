@@ -169,7 +169,7 @@ class ArchiveController(base):
         return d
 
     def construct_send_target_dir(self, target_dir):
-        observing_time = datetime.datetime.now(datetime.timezone.utc)  - datetime.timedelta(hours=12)
+        observing_time = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=12)
         day_string = str(observing_time.date())
 
         final_target_dir = f"{target_dir}/{day_string}/"
