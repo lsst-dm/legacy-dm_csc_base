@@ -48,7 +48,6 @@ class ArchiveController(base):
         self.camera_name = root['CAMERA_NAME']
         self.archiver_name = root['ARCHIVER_NAME']
         self.short_name = root['SHORT_NAME']
-        self._msg_actions = {}
 
         archive = root['ARCHIVE']
 
