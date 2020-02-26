@@ -29,10 +29,10 @@ LOGGER = logging.getLogger(__name__)
 
 class Archiveboard(Scoreboard):
 
-    def __init__(self, device, db, host, port=6379):
+    def __init__(self, device, db, host, port=6379, key=None):
         super().__init__(device, db, host, port)
 
-        self.association_name = device+"_association"
+        self.association_key = key
         self.JOBNUM = "jobnum"
         self.PAIRED_FORWARDER = "paired_forwarder"
         self.FORWARDER_LIST = "forwarder_list"
@@ -79,11 +79,11 @@ class Archiveboard(Scoreboard):
         return self.conn.get(forwarder_key)
 
     def set_forwarder_association(self, forwarder_hostname, timeout):
-        self.conn.set(self.association_name, forwarder_hostname, timeout)
+        self.conn.set(self.association_key, forwarder_hostname, timeout)
 
     def delete_forwarder_association(self):
-        LOGGER.info(f'deleting {self.association_name}')
-        self.conn.delete(self.association_name)
+        LOGGER.info(f'deleting {self.association_key}')
+        self.conn.delete(self.association_key)
 
     def set_paired_forwarder_info(self, forwarder_info, timeout):
         info = forwarder_info.__dict__
