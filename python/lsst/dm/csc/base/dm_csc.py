@@ -40,10 +40,6 @@ class dm_csc(ConfigurableCsc):
             State.STANDBY: "standby"}
 
 
-    @staticmethod
-    def get_config_pkg():
-        return "dm_config_at"
-
     async def configure(self, config):
         """Configure this CSC and output the ``settingsApplied`` event.
 

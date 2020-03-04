@@ -20,6 +20,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import asyncio
+from copy import deepcopy
 import datetime
 import logging
 import os
@@ -48,7 +49,6 @@ class ArchiveController(base):
         self.camera_name = root['CAMERA_NAME']
         self.archiver_name = root['ARCHIVER_NAME']
         self.short_name = root['SHORT_NAME']
-        self._msg_actions = {}
 
         archive = root['ARCHIVE']
 
@@ -219,6 +219,7 @@ class ArchiveController(base):
         return d
 
     async def process_file_transfer_completed(self, incoming_msg):
+        msg = deepcopy(incoming_msg)
         filename = incoming_msg['FILENAME']
         reply_queue = incoming_msg['REPLY_QUEUE']
         ack_msg = self.build_file_transfer_completed_ack(incoming_msg)

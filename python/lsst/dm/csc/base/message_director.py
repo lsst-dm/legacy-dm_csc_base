@@ -132,7 +132,7 @@ class MessageDirector(Director):
 
         self.services_started_evt.set()
         try:
-            self.scoreboard = Archiveboard(self._name, db=self.redis_db, host=self.redis_host)
+            self.scoreboard = Archiveboard(self._name, db=self.redis_db, host=self.redis_host, key=self.ASSOCIATION_KEY)
         except Exception as e:
             LOGGER.info(e)
             msg = "scoreboard could't establish connection with redis broker"
