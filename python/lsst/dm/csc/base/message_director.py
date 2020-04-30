@@ -283,7 +283,7 @@ class MessageDirector(Director):
         """
         LOGGER.info(f"message was: {body}")
         ch.basic_ack(method.delivery_tag)
-        obsid, raft, sensor = self.parent.extract_filename_info(msg['FILENAME'])
+        obsid, raft, sensor = self.parent.extract_filename_info(body['FILENAME'])
         #task = asyncio.create_task(self.parent.send_imageRetrievalForArchiving(self.CAMERA_NAME, body['OBSID'], self.ARCHIVER_NAME))
         task = asyncio.create_task(self.parent.send_imageRetrievalForArchiving(self.CAMERA_NAME, obsid, raft, sensor, self.ARCHIVER_NAME))
 
