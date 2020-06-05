@@ -70,8 +70,13 @@ class dm_csc(ConfigurableCsc):
     def extract_filename_info(self, filename):
         name = os.path.basename(filename)
         id_info = name.split("-")
+        if len(id_info) != 2:
+            raise Exception("bad filename format")
         obsid = id_info[0]
-        raft_sensor = id_info[1].split(".")[0]
+        value = id_info[1].split(".")
+        if len(value) != 2:
+            raise Exception("bad filename format")
+        raft_sensor = value[0]
         raft = raft_sensor[1:3]
         sensor = raft_sensor[4:7]
         return obsid, raft, sensor
