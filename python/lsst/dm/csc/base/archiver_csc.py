@@ -36,13 +36,24 @@ class ArchiverCSC(dm_csc):
         super().__init__(name, index=index, schema_path=schema_path, config_dir=config_dir,
                          initial_state=initial_state, initial_simulation_mode=initial_simulation_mode)
 
-    async def send_imageRetrievalForArchiving(self, camera, obsid, raft, sensor, archiverName):
-        LOGGER.info(f"sending camera={camera} obsid={obsid} raft={raft} sensor={sensor}  archiverName={archiverName}")
-        self.evt_imageRetrievalForArchiving.set_put(camera=camera, obsid=obsid, raft=raft, sensor=sensor, archiverName=archiverName)
+    async def send_imageRetrievalForArchiving(self, camera, archiverName, dictionary):
+        obsid = dictionary['OBSID']
+        raft = dictionary['RAFT']
+        sensor = dictionary['SENSOR']
+        statusCode = dictionary['STATUS_CODE']
+        description = dictionary['DESCRIPTION']
+        LOGGER.info(f"sending camera={camera} obsid={obsid} raft={raft} sensor={sensor}  archiverName={archiverName}, statusCode={statusCode}, description={description}")
+        self.evt_imageRetrievalForArchiving.set_put(camera=camera, obsid=obsid, raft=raft, sensor=sensor, archiverName=archiverName, statusCode=statusCode, description=description)
 
-    async def send_imageInOODS(self, camera, obsid, raft, sensor, archiverName, statusCode, description):
-        LOGGER.info(f"sending {camera} {obsid} {raft} {sensor} {archiverName} {statusCode}: {description}")
+    async def send_imageInOODS(self, camera, archiverName, dictionary):
 
+        obsid = dictionary['OBSID']
+        raft = dictionary['RAFT']
+        sensor = dictionary['SENSOR']
+        statusCode = dictionary['STATUS_CODE']
+        description = dictionary['DESCRIPTION']
+
+        LOGGER.info(f"sending camera={camera} obsid={obsid} raft={raft} sensor={sensor}  archiverName={archiverName}, statusCode={statusCode}, description={description}")
         self.evt_imageInOODS.set_put(camera=camera,
                                      obsid=obsid,
                                      raft=raft,

@@ -60,27 +60,6 @@ class dm_csc(ConfigurableCsc):
 
         )
 
-    # this assumes a file name of the type:
-    # "CC_O_20200407_000004-R22S00.fits"
-    # note:
-    # everything to the left of "-" is obsid
-    # Raft is specified by Rnn
-    # Sensor is specified Snn
-    #
-    def extract_filename_info(self, filename):
-        name = os.path.basename(filename)
-        id_info = name.split("-")
-        if len(id_info) != 2:
-            raise Exception("bad filename format")
-        obsid = id_info[0]
-        value = id_info[1].split(".")
-        if len(value) != 2:
-            raise Exception("bad filename format")
-        raft_sensor = value[0]
-        raft = raft_sensor[1:3]
-        sensor = raft_sensor[4:7]
-        return obsid, raft, sensor
-    
     def report_summary_state(self):
         super().report_summary_state()
 

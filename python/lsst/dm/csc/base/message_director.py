@@ -283,15 +283,8 @@ class MessageDirector(Director):
         """
         LOGGER.info(f"message was: {body}")
         ch.basic_ack(method.delivery_tag)
-        obsid = None
-        raft = None
-        sensor = None
-        try:
-            obsid, raft, sensor = self.parent.extract_filename_info(body['FILENAME'])
-        except Exception as e:
-            LOGGER.info(e)
-        
-        task = asyncio.create_task(self.parent.send_imageRetrievalForArchiving(self.CAMERA_NAME, obsid, raft, sensor, self.ARCHIVER_NAME))
+
+        task = asyncio.create_task(self.parent.send_imageRetrievalForArchiving(self.CAMERA_NAME, self.ARCHIVER_NAME, body))
 
     async def send_ingest_message_to_oods(self, body):
         msg = self.build_file_ingest_request_message(body)
@@ -311,20 +304,7 @@ class MessageDirector(Director):
         @param msg: contents of image_in_oods message
         """
         LOGGER.info(f"msg received: {msg}")
-        camera = msg['CAMERA']
-        obsid = msg['OBSID']
-        archiver = msg['ARCHIVER']
-        status_code = msg['STATUS_CODE']
-        description = msg['DESCRIPTION']
-        n_obsid = None
-        raft = None
-        sensor = None
-        try:
-            n_obsid, raft, sensor = self.parent.extract_filename_info(msg['FILENAME'])
-        except Exception as e:
-            LOGGER.info(e)
-
-        task = asyncio.create_task(self.parent.send_imageInOODS(camera, n_obsid, raft, sensor, archiver, status_code, description))
+        task = asyncio.create_task(self.parent.send_imageInOODS(camera, archiver, msg))
 
     async def process_items_xferd_ack(self, msg):
         """ Handle at_items_xferd_ack message
