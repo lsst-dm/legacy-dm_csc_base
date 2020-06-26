@@ -24,12 +24,12 @@ import logging
 import os.path
 import traceback
 from lsst.ts.salobj import State
-from lsst.ts.salobj import ConfigurableCsc
+from lsst.ts.salobj import BasicCsc
 
 LOGGER = logging.getLogger(__name__)
 
 
-class dm_csc(ConfigurableCsc):
+class dm_csc(BasicCsc):
     def __init__(self, name, index, schema_path, config_dir, initial_state, initial_simulation_mode):
         super().__init__(name, index=index, schema_path=schema_path, config_dir=config_dir,
                          initial_state=initial_state, initial_simulation_mode=initial_simulation_mode)
