@@ -31,10 +31,8 @@ LOGGER = logging.getLogger(__name__)
 
 class ArchiverCSC(dm_csc):
 
-    def __init__(self, name, index, schema_path=None, config_dir=None,
-                 initial_state=salobj.State.STANDBY, initial_simulation_mode=0):
-        super().__init__(name, index=index, schema_path=schema_path, config_dir=config_dir,
-                         initial_state=initial_state, initial_simulation_mode=initial_simulation_mode)
+    def __init__(self, name, index, config_dir=None, initial_state=salobj.State.STANDBY, initial_simulation_mode=0):
+        super().__init__(name, index=index, config_dir=config_dir, initial_state=initial_state, initial_simulation_mode=initial_simulation_mode)
 
     async def send_imageRetrievalForArchiving(self, camera, obsid, raft, sensor, archiverName):
         LOGGER.info(f"sending camera={camera} obsid={obsid} raft={raft} sensor={sensor}  archiverName={archiverName}")

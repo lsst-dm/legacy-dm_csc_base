@@ -30,9 +30,8 @@ LOGGER = logging.getLogger(__name__)
 
 
 class dm_csc(BaseCsc):
-    def __init__(self, name, index, schema_path, config_dir, initial_state, initial_simulation_mode):
-        super().__init__(name, index=index, schema_path=schema_path, config_dir=config_dir,
-                         initial_state=initial_state, initial_simulation_mode=initial_simulation_mode)
+    def __init__(self, name, index, config_dir, initial_state, initial_simulation_mode):
+        super().__init__(name, index=index, config_dir=config_dir, initial_state=initial_state, initial_simulation_mode=initial_simulation_mode)
         self.state_to_str = {
             State.DISABLED: "disabled",
             State.ENABLED: "enabled",
