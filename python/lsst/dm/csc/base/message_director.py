@@ -499,12 +499,12 @@ class MessageDirector(Director):
         await self.publish_message(self.forwarder_consume_queue, msg)
         LOGGER.info("startIntegration sent to forwarder")
 
+        evt = await self.create_event(ack_id)
         if self.wait_for_ack_timeouts:
             code = 5752
             report = f"No xfer_params response from forwarder. Setting fault state with code = {code}"
 
             # creates a timer waiting for an acknowledgement
-            evt = await self.create_event(ack_id)
             waiter = Waiter(evt, self.parent, self.ack_timeout)
             task = asyncio.create_task(waiter.pause(code, report))
 
@@ -542,7 +542,6 @@ class MessageDirector(Director):
         ack_id = msg["ACK_ID"]
         LOGGER.info(f"startIntegration ack_id = {ack_id} received")
         evt = await self.clear_event(ack_id)
-        pass
 
     #
     # endReadout
@@ -570,7 +569,6 @@ class MessageDirector(Director):
         ack_id = msg["ACK_ID"]
         LOGGER.info(f"endReadout ack_id = {ack_id} received")
         evt = await self.clear_event(ack_id)
-        pass
 
     #
     # largeFileObjectAvailable
@@ -597,7 +595,6 @@ class MessageDirector(Director):
         ack_id = msg["ACK_ID"]
         LOGGER.info(f"largeFileObjectAvailable ack_id = {ack_id} received")
         evt = await self.clear_event(ack_id)
-        pass
 
     #
     # Heartbeat
