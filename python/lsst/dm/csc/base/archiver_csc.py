@@ -38,8 +38,12 @@ class ArchiverCSC(dm_csc):
 
     async def send_imageRetrievalForArchiving(self, camera, archiverName, dictionary):
         obsid = dictionary['OBSID']
-        raft = dictionary['RAFT']
-        sensor = dictionary['SENSOR']
+        raft = "undef"
+        if 'RAFT' in dictionary:
+            raft = dictionary['RAFT']
+        sensor = "undef"
+        if 'SENSOR' in dictionary:
+            sensor = dictionary['SENSOR']
         statusCode = dictionary['STATUS_CODE']
         description = dictionary['DESCRIPTION']
         LOGGER.info(f"sending camera={camera} obsid={obsid} raft={raft} sensor={sensor}  archiverName={archiverName}, statusCode={statusCode}, description={description}")
