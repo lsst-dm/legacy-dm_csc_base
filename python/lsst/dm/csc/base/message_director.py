@@ -528,11 +528,11 @@ class MessageDirector(Director):
         # the data is extracted within the "process_new_item_ack" method, and the
         # "startIntegration" message is build and sent to the forwarder from that method
 
+        evt = await self.create_event(ack_id)
         if self.wait_for_ack_timeouts:
             code = 5752
             report = f"No ack response from at archive controller"
 
-            evt = await self.create_event(ack_id)
             waiter = Waiter(evt, self.parent, self.ack_timeout)
             task = asyncio.create_task(waiter.pause(code, report))
 
@@ -557,10 +557,10 @@ class MessageDirector(Director):
         LOGGER.info(f"transmit_endReadout msg = {msg}")
         await self.publish_message(self.forwarder_consume_queue, msg)
 
+        evt = await self.create_event(ack_id)
         if self.wait_for_ack_timeouts:
             code = 5753
             report = f"No endReadout ack from forwarder. Setting fault state with code = {code}"
-            evt = await self.create_event(ack_id)
             waiter = Waiter(evt, self.parent, self.ack_timeout)
             task = asyncio.create_task(waiter.pause(code, report))
 
@@ -584,10 +584,10 @@ class MessageDirector(Director):
         LOGGER.info(f"transmit_largeFileObjectAvailable msg = {msg}")
         await self.publish_message(self.forwarder_consume_queue, msg)
 
+        evt = await self.create_event(ack_id)
         if self.wait_for_ack_timeouts:
             code = 5754
             report = f"No largeFileObjectAvailable ack from forwarder. Setting fault state with code = {code}"
-            evt = await self.create_event(ack_id)
             waiter = Waiter(evt, self.parent, self.ack_timeout)
             task = asyncio.create_task(waiter.pause(code, report))
 
