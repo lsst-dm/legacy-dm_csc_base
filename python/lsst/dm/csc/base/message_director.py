@@ -595,7 +595,7 @@ class MessageDirector(Director):
         """ Handle header_ready_ack message
         """
         ack_id = msg["ACK_ID"]
-        LOGGER.info(f "largeFileObjectAvailable ack_id = {ack_id} received")
+        LOGGER.info(f"largeFileObjectAvailable ack_id = {ack_id} received")
         evt = await self.clear_event(ack_id)
         pass
 
