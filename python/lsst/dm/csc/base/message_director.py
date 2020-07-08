@@ -310,7 +310,7 @@ class MessageDirector(Director):
         @param msg: contents of image_in_oods message
         """
         LOGGER.info(f"msg received: {msg}")
-        task = asyncio.create_task(self.parent.send_imageInOODS(camera, archiver, msg))
+        task = asyncio.create_task(self.parent.send_imageInOODS(msg))
 
     async def process_items_xferd_ack(self, msg):
         """ Handle at_items_xferd_ack message

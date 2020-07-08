@@ -49,8 +49,10 @@ class ArchiverCSC(dm_csc):
         LOGGER.info(f"sending camera={camera} obsid={obsid} raft={raft} sensor={sensor}  archiverName={archiverName}, statusCode={statusCode}, description={description}")
         self.evt_imageRetrievalForArchiving.set_put(camera=camera, obsid=obsid, raft=raft, sensor=sensor, archiverName=archiverName, statusCode=statusCode, description=description)
 
-    async def send_imageInOODS(self, camera, archiverName, dictionary):
+    async def send_imageInOODS(self, dictionary):
 
+        camera = dictionary['CAMERA']
+        archiverName = dictionary['ARCHIVER')
         obsid = dictionary['OBSID']
         raft = dictionary['RAFT']
         sensor = dictionary['SENSOR']
