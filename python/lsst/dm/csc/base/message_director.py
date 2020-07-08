@@ -63,6 +63,12 @@ class MessageDirector(Director):
         self.ARCHIVE_CTRL_CONSUME_QUEUE = None
         self.TELEMETRY_QUEUE = None
 
+        # if wait_for_ack_timeouts is set to True, then a timer is started 
+        # when a message is sent to the Forwarder.  The Forwarder is exxpected
+        # to respond within that timeout window or the archiver will go into
+        # a fault state
+        self.wait_for_ack_timeouts = False
+
     def config_val(self, config, key):
         if key in config:
             return config[key]
@@ -310,7 +316,8 @@ class MessageDirector(Director):
         """ Handle at_items_xferd_ack message
         @param msg: contents of items_xferd_ack message
         """
-        LOGGER.info("process_items_xferd: ack received")
+        ack_id = msg["ACK_ID"]
+        LOGGER.info(f"process_items_xferd: ack {ack_id} received")
 
     async def process_archiver_health_check_ack(self, msg):
         """ Handle archiver_health_check_ack message
@@ -457,8 +464,8 @@ class MessageDirector(Director):
         @param msg: contents of new_at_item_ack
         """
         ack_id = msg["ACK_ID"]
+        LOGGER.info(f"process_new_item_ack ack_id = {ack_id} received")
         evt = await self.clear_event(ack_id)
-        LOGGER.info(f"{msg}")
         # this is scheduled, since process_new_item_ack is never await-ed
         task = asyncio.create_task(self.send_startIntegration(msg))
 
@@ -472,13 +479,14 @@ class MessageDirector(Director):
         await self.publish_message(self.forwarder_consume_queue, msg)
         LOGGER.info("startIntegration sent to forwarder")
 
-        code = 5752
-        report = f"No xfer_params response from forwarder. Setting fault state with code = {code}"
-
-        # creates a timer waiting for an acknowledgement
         evt = await self.create_event(ack_id)
-        waiter = Waiter(evt, self.parent, self.ack_timeout)
-        task = asyncio.create_task(waiter.pause(code, report))
+        if self.wait_for_ack_timeouts:
+            code = 5752
+            report = f"No xfer_params response from forwarder. Setting fault state with code = {code}"
+
+            # creates a timer waiting for an acknowledgement
+            waiter = Waiter(evt, self.parent, self.ack_timeout)
+            task = asyncio.create_task(waiter.pause(code, report))
 
     #
     # startIntegration
@@ -491,11 +499,9 @@ class MessageDirector(Director):
 
         # first we send a message to the archiver, to obtain the correct target directory
         msg = self.build_archiver_message(ack_id, data)
+        LOGGER.info(f"transmit_startIntegration msg = {msg}")
 
         await self.publish_message(self.ARCHIVE_CTRL_CONSUME_QUEUE, msg)
-
-        code = 5752
-        report = f"No ack response from at archive controller"
 
         # now we set up a wait for the ack. If the ack doesn't appear within the time 
         # frame allotted, a fault is thrown.  Otherwise, when the ack message is received,
@@ -503,16 +509,19 @@ class MessageDirector(Director):
         # "startIntegration" message is build and sent to the forwarder from that method
 
         evt = await self.create_event(ack_id)
-        waiter = Waiter(evt, self.parent, self.ack_timeout)
-        task = asyncio.create_task(waiter.pause(code, report))
+        if self.wait_for_ack_timeouts:
+            code = 5752
+            report = f"No ack response from at archive controller"
+
+            waiter = Waiter(evt, self.parent, self.ack_timeout)
+            task = asyncio.create_task(waiter.pause(code, report))
 
     async def process_xfer_params_ack(self, msg):
         """ Handle xfer_params_ack message
         """
         ack_id = msg["ACK_ID"]
+        LOGGER.info(f"startIntegration ack_id = {ack_id} received")
         evt = await self.clear_event(ack_id)
-        LOGGER.info("startIntegration ack received")
-        pass
 
     #
     # endReadout
@@ -524,22 +533,22 @@ class MessageDirector(Director):
         ack_id = await self.get_next_ack_id()
 
         msg = self.build_endReadout_message(ack_id, data)
+        LOGGER.info(f"transmit_endReadout msg = {msg}")
         await self.publish_message(self.forwarder_consume_queue, msg)
 
-        code = 5753
-        report = f"No endReadout ack from forwarder. Setting fault state with code = {code}"
-
         evt = await self.create_event(ack_id)
-        waiter = Waiter(evt, self.parent, self.ack_timeout)
-        task = asyncio.create_task(waiter.pause(code, report))
+        if self.wait_for_ack_timeouts:
+            code = 5753
+            report = f"No endReadout ack from forwarder. Setting fault state with code = {code}"
+            waiter = Waiter(evt, self.parent, self.ack_timeout)
+            task = asyncio.create_task(waiter.pause(code, report))
 
     async def process_fwdr_end_readout_ack(self, msg):
         """ Handle at_fwder_end_readout_ack message
         """
         ack_id = msg["ACK_ID"]
+        LOGGER.info(f"endReadout ack_id = {ack_id} received")
         evt = await self.clear_event(ack_id)
-        LOGGER.info("endReadout ack received")
-        pass
 
     #
     # largeFileObjectAvailable
@@ -550,22 +559,22 @@ class MessageDirector(Director):
         """
         ack_id = await self.get_next_ack_id()
         msg = self.build_largeFileObjectAvailable_message(ack_id, data)
+        LOGGER.info(f"transmit_largeFileObjectAvailable msg = {msg}")
         await self.publish_message(self.forwarder_consume_queue, msg)
 
-        code = 5754
-        report = f"No largeFileObjectAvailable ack from forwarder. Setting fault state with code = {code}"
-
         evt = await self.create_event(ack_id)
-        waiter = Waiter(evt, self.parent, self.ack_timeout)
-        task = asyncio.create_task(waiter.pause(code, report))
+        if self.wait_for_ack_timeouts:
+            code = 5754
+            report = f"No largeFileObjectAvailable ack from forwarder. Setting fault state with code = {code}"
+            waiter = Waiter(evt, self.parent, self.ack_timeout)
+            task = asyncio.create_task(waiter.pause(code, report))
 
     async def process_header_ready_ack(self, msg):
         """ Handle header_ready_ack message
         """
         ack_id = msg["ACK_ID"]
+        LOGGER.info(f"largeFileObjectAvailable ack_id = {ack_id} received")
         evt = await self.clear_event(ack_id)
-        LOGGER.info("largeFileObjectAvailable ack received")
-        pass
 
     #
     # Heartbeat
