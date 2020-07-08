@@ -54,8 +54,12 @@ class ArchiverCSC(dm_csc):
         camera = dictionary['CAMERA']
         archiverName = dictionary['ARCHIVER']
         obsid = dictionary['OBSID']
-        raft = dictionary['RAFT']
-        sensor = dictionary['SENSOR']
+        raft = "undef"
+        if 'RAFT' in dictionary:
+            raft = dictionary['RAFT']
+        sensor = "undef"
+        if 'SENSOR' in dictionary:
+            sensor = dictionary['SENSOR']
         statusCode = dictionary['STATUS_CODE']
         description = dictionary['DESCRIPTION']
 
