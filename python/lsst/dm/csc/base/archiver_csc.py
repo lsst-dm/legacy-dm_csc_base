@@ -52,7 +52,7 @@ class ArchiverCSC(dm_csc):
     async def send_imageInOODS(self, dictionary):
 
         camera = dictionary['CAMERA']
-        archiverName = dictionary['ARCHIVER')
+        archiverName = dictionary['ARCHIVER']
         obsid = dictionary['OBSID']
         raft = dictionary['RAFT']
         sensor = dictionary['SENSOR']
