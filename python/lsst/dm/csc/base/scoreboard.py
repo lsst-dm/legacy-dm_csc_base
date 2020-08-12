@@ -26,6 +26,21 @@ LOGGER = logging.getLogger(__name__)
 
 
 class Scoreboard:
+    """Scoreboard is the interface to the Redis key/value database. It
+    is meant to store information about the running status of services used
+    by the archiver system
+
+    Parameters
+    ----------
+    device : `str`
+        device name
+    db : `int`
+        redis database number
+    host : `str`
+        host name of Redis instance
+    port : `int`
+        network port number of Redis instance
+    """
 
     def __init__(self, device, db, host, port=6379):
         LOGGER.info(f"Connecting {device} to redis database {db} at host {host}:{port}")
@@ -37,13 +52,29 @@ class Scoreboard:
         self.SESSION = "session"
 
     def get_state(self):
+        """Get the device state
+
+        Returns
+        ------- 
+        The device state
+        """
         return self.conn.hget(self.device, self.STATE)
 
     def set_state(self, state):
+        """Set the device state
+        """
         self.conn.hset(self.device, self.STATE, state)
 
     def get_session(self):
+        """Get the session identifier
+        """
         return self.conn.hget(self.device, self.SESSION)
 
     def set_session(self, session):
+        """Set the session identifier
+
+        Returns
+        ------- 
+        The session identifier
+        """
         self.conn.hset(self.device, self.SESSION, session)

@@ -35,6 +35,13 @@ LOGGER = logging.getLogger(__name__)
 
 class MessageDirector(Director):
     """ Specialization of Director to handle non-CSC messaging and transactions
+
+    Parameters
+    ----------
+    parent : `lsst.dm.csc.base.dm_csc`
+    name : `str`
+    config_filename : `str`
+    log_filename : `str`
     """
     def __init__(self, parent, name, config_filename, log_filename):
         super().__init__(name, config_filename, log_filename)
@@ -76,10 +83,12 @@ class MessageDirector(Director):
         return None
 
     def configure(self):
+        """populate the message director with values from the YAML configuration file
+        """
 
         cdm = self.getConfiguration()
 
-        LOGGER.info(f'******* Initializing {self.ARCHIVER_NAME} ******')
+        LOGGER.info(f'******* Configuring {self.ARCHIVER_NAME} ******')
         root = cdm["ROOT"]
         print(f"root = {root}")
 
@@ -131,7 +140,7 @@ class MessageDirector(Director):
         self.scoreboard = None
 
     async def start_services(self):
-        """ called when CSC start commmand is made to start beacons, scoreboard and other services
+        """Called when CSC start commmand is made to start beacons, scoreboard and other services
         """
         # this is the beginning of the start command, when we're about to go into disabled state
         LOGGER.info("start_services called")
@@ -171,7 +180,7 @@ class MessageDirector(Director):
         await task
 
     async def stop_services(self):
-        """ Stop all non-CSC commmunication
+        """Stop all non-CSC commmunication
         """
         if self.services_started_evt.is_set():
             self.stop_watcher_evt.set()
@@ -180,7 +189,7 @@ class MessageDirector(Director):
             self.services_started_evt.clear()
 
     async def establish_connections(self, info):
-        """ Establish non-CSC messaging connections
+        """Establish non-CSC messaging connections
         """
         await self.setup_publishers()
         await self.setup_consumers()
@@ -190,7 +199,7 @@ class MessageDirector(Director):
                                                                                "ARCHIVE_HEALTH_CHECK",
                                                                                self.archive_heartbeat_evt))
     async def rescind_connections(self):
-        """ Stop non-CSC messaging connections
+        """Stop non-CSC messaging connections
         """
         LOGGER.info("rescinding connections")
         await self.stop_heartbeats()
@@ -199,44 +208,40 @@ class MessageDirector(Director):
         LOGGER.info("all connections rescinded")
 
     async def stop_heartbeats(self):
-        """ Stop all heartbeat tasks
+        """Stop all heartbeat tasks
         """
         LOGGER.info("stopping heartbeats")
         await self.stop_heartbeat_task(self.archive_heartbeat_task)
 
     async def stop_heartbeat_task(self, task):
-        """ Stop a specific heartbeat task
-        @param task: the task to stop
+        """Stop a specific heartbeat task
+
+        Parameters
+        ----------
+        task: `asyncio.Task`
+            the heartbeat task to stop
         """
         if task is not None:
             task.cancel()
             await task
 
     async def setup_publishers(self):
-        """ Set up base publisher with pub_base_broker_url by creating a new instance
-            of AsyncioPublisher class
-
-            :params: None.
-
-            :return: None.
+        """Set up base publisher with pub_base_broker_url by creating a new instance
+           of AsyncioPublisher class
         """
         LOGGER.info('Setting up archiver publisher')
         self.publisher = Publisher(self.base_broker_url, csc_parent=self.parent)
         await self.publisher.start()
 
     async def stop_publishers(self):
-        """ Stop all publisher connections
+        """Stop all publisher connections
         """
         LOGGER.info("stopping publishers")
         if self.publisher is not None:
             await self.publisher.stop()
 
     async def setup_consumers(self):
-        """ Create ThreadManager object with base broker url and kwargs to setup consumers.
-
-            :params: None.
-
-            :return: None.
+        """Create ThreadManager object with base broker url and kwargs to setup consumers.
         """
         # message from OODS
         self.oods_consumer = Consumer(self.base_broker_url, self.parent, self.OODS_CONSUME_QUEUE, self.on_message)
@@ -258,7 +263,7 @@ class MessageDirector(Director):
         self.telemetry_consumer.start()
 
     async def stop_consumers(self):
-        """ Stop all consumer connections
+        """Stop all consumer connections
         """
         LOGGER.info("stopping consumers")
         if self.archive_consumer is not None:
@@ -271,7 +276,7 @@ class MessageDirector(Director):
             self.oods_consumer.stop()
 
     def on_message(self, ch, method, properties, body):
-        """ Route the message to the proper handler
+        """Route the message to the proper handler
         """
         msg_type = body['MSG_TYPE']
         if (msg_type != self.FWDR_HEALTH_CHECK_ACK) and (msg_type != 'ARCHIVE_HEALTH_CHECK_ACK'):
@@ -285,18 +290,35 @@ class MessageDirector(Director):
             LOGGER.error(f"Unknown MSG_TYPE: {msg_type}")
 
     def on_telemetry(self, ch, method, properties, body):
-        """ Called when telemetry is received.  This calls parent CSC object to emit the telemetry as a SAL message
+        """Called when telemetry is received. Calls parent CSC object to emit the telemetry as a SAL message
         """
         LOGGER.info(f"message was: {body}")
         ch.basic_ack(method.delivery_tag)
 
         task = asyncio.create_task(self.parent.send_imageRetrievalForArchiving(self.CAMERA_NAME, self.ARCHIVER_NAME, body))
 
-    async def send_ingest_message_to_oods(self, body):
-        msg = self.build_file_ingest_request_message(body)
-        await self.publisher.publish_message(self.OODS_PUBLISH_QUEUE, msg)
+    async def send_ingest_message_to_oods(self, msg):
+        """Transmit an ingestion request message to the OODS
+
+        Parameters
+        ----------
+        msg : `dict`
+            Dictionary containing parameters of message used to create a message to send to the OODS
+        """
+        m = self.build_file_ingest_request_message(msg)
+        await self.publisher.publish_message(self.OODS_PUBLISH_QUEUE, m)
 
     def build_file_ingest_request_message(self, msg):
+        """Create a ingest request message for the OODS
+
+        Parameters
+        ----------
+        msg : `dict`
+
+        Returns
+        -------
+        Dictionary containing parameters used for OODS file ingest request message
+        """
         d = {}
         d['MSG_TYPE'] = self.FILE_INGEST_REQUEST
         d['CAMERA'] = self.CAMERA_NAME
@@ -307,33 +329,49 @@ class MessageDirector(Director):
 
     async def process_image_in_oods(self, msg):
         """ Handle image_in_oods message
-        @param msg: contents of image_in_oods message
+
+        Parameters
+        ----------
+        msg : `dict`
+            contents of image_in_oods message
         """
         LOGGER.info(f"msg received: {msg}")
         task = asyncio.create_task(self.parent.send_imageInOODS(msg))
 
     async def process_items_xferd_ack(self, msg):
         """ Handle at_items_xferd_ack message
-        @param msg: contents of items_xferd_ack message
+
+        Parameters
+        ----------
+        msg : `dict`
+            contents of items_xferd_ack message
         """
         ack_id = msg["ACK_ID"]
         LOGGER.info(f"process_items_xferd: ack {ack_id} received")
 
     async def process_archiver_health_check_ack(self, msg):
         """ Handle archiver_health_check_ack message
-        @param msg: contents of archiver_health_check_ack message
+
+        Parameters
+        ----------
+        msg : `dict`
+            contents of archiver_health_check_ack message
         """
         self.archive_heartbeat_evt.clear()
 
     async def publish_message(self, queue, msg):
         """ publish message
-        @param queue: queue to write to
-        @param msg: dict containing message contents
+        Parameters
+        ----------
+        queue : `str`
+            RabbitMQ queue to write to
+        msg : `dict`
+            Containing message contents
         """
         await self.publisher.publish_message(queue, msg)
 
     async def send_association_message(self):
-        """ send an association message to inform the forwarder it has been picked
+        """Send an association message to inform the forwarder it has been picked
         """
         ack_id = await self.get_next_ack_id()
         msg = {}
@@ -351,9 +389,14 @@ class MessageDirector(Director):
         self.startIntegration_ack_task = asyncio.create_task(waiter.pause(code, report))
         
     def send_telemetry(self, status_code, description):
-        """ send telemetry
-        @param status_code: message code
-        @param description: message contents
+        """Send telemetry
+
+        Parameters
+        ----------
+        status_code : `int`
+            status id
+        description: `str`
+            message contents
         """
         msg = {}
         msg['MSG_TYPE'] = 'TELEMETRY'
@@ -363,9 +406,18 @@ class MessageDirector(Director):
         self.publish_message(self.TELEMETRY_QUEUE, msg)
 
     def build_archiver_message(self, ack_id, data):
-        """ build a NEW_AT_ARCHIVE_ITEM message to send to the archiver
-        @param ack_id: acknowledgment id to send
-        @param data: CSC message contents to be used to send
+        """Build a NEW_AT_ARCHIVE_ITEM message to send to the archiver
+
+        Parameters
+        ----------
+        ack_id : `str`
+            acknowledgment id to send
+        data :
+            CSC message contents to be used to send
+
+        Returns
+        -------
+        dict containing message contents
         """
         LOGGER.info(f'data = {data}')
         d = {}
@@ -386,9 +438,18 @@ class MessageDirector(Director):
         return d
 
     def build_startIntegration_message(self, ack_id, data):
-        """ build a startIntegration message to send to the Forwarder
-        @param ack_id: acknowledgment id to send
-        @param data: CSC message contents to be used to send
+        """Build a startIntegration message to send to the Forwarder
+
+        Parameters
+        ----------
+        ack_id : `str`
+            acknowledgment id to send
+        data : `dict`
+            CSC message contents to be used to send
+
+        Returns
+        -------
+        dict containing message contents
         """
         d = {}
         d['MSG_TYPE'] = self.FWDR_XFER_PARAMS
@@ -412,8 +473,17 @@ class MessageDirector(Director):
 
     def build_endReadout_message(self, ack_id, data):
         """ build an endReadout message to send to the Forwarder
-        @param ack_id: acknowledgment id to send
-        @param data: CSC message contents to be used to send
+
+        Parameters
+        ----------
+        ack_id : `str`
+            acknowledgment id to send
+        data :
+            CSC message contents to be used to send
+
+        Returns
+        -------
+        dict containing message contents
         """
         d = {}
         d['MSG_TYPE'] = self.FWDR_END_READOUT
@@ -428,8 +498,18 @@ class MessageDirector(Director):
 
     def build_largeFileObjectAvailable_message(self, ack_id, data):
         """ build a largeFileObjectAvailable message to send to the Forwarder
-        @param ack_id: acknowledgment id to send
-        @param data: CSC message contents to be used to send
+
+
+        Parameters
+        ----------
+        ack_id : `str`
+            acknowledgment id to send
+        data :
+            CSC message contents to be used to send
+
+        Returns
+        -------
+        dict containing message contents
         """
         d = {}
         d['MSG_TYPE'] = self.FWDR_HEADER_READY
@@ -441,9 +521,12 @@ class MessageDirector(Director):
 
     async def process_association_ack(self, msg):
         """ Handle incoming association_ack message
-        @param msg: contents of association ack
+
+        Parameters
+        ----------
+        msg: `dict`
+            contents of association ack
         """
-        # TODO: this is temporary until the Forwarder returns ACK_ID; after that starts happening, this code can be removed
         if "ACK_ID" in msg:
             ack_id = msg["ACK_ID"]
             LOGGER.info(f"association ack received {ack_id}")
@@ -460,8 +543,12 @@ class MessageDirector(Director):
 
 
     async def process_new_item_ack(self, msg):
-        """ Handle incoming new_at_item_ack message
-        @param msg: contents of new_at_item_ack
+        """Handle incoming new_at_item_ack message
+
+        Parameters
+        ----------
+        msg : `dict`
+            contents of new_at_item_ack
         """
         ack_id = msg["ACK_ID"]
         LOGGER.info(f"process_new_item_ack ack_id = {ack_id} received")
@@ -469,14 +556,18 @@ class MessageDirector(Director):
         # this is scheduled, since process_new_item_ack is never await-ed
         task = asyncio.create_task(self.send_startIntegration(msg))
 
-    async def send_startIntegration(self, data):
-        """ send the startIntegration message
-        @param data: contents of CSC startIntegration message
+    async def send_startIntegration(self, msg):
+        """Send the startIntegration message to the forwarder
+
+        Parameters
+        ----------
+        msg : `dict`
+            Contents of CSC startIntegration message
         """
         ack_id = await self.get_next_ack_id()
-        msg = self.build_startIntegration_message(ack_id, data)
+        m = self.build_startIntegration_message(ack_id, msg)
 
-        await self.publish_message(self.forwarder_consume_queue, msg)
+        await self.publish_message(self.forwarder_consume_queue, m)
         LOGGER.info("startIntegration sent to forwarder")
 
         evt = await self.create_event(ack_id)
@@ -491,17 +582,24 @@ class MessageDirector(Director):
     #
     # startIntegration
     #
-    async def transmit_startIntegration(self, data):
-        """transmit startIntegration to the forwarder
-        @param data: the contents of the startIntegration CSC message
+    async def transmit_startIntegration(self, msg):
+        """transmit startIntegration to the archive controller
+
+        The response message returns information from the archive controller which is
+        transmitted to the Forwarder
+
+        Parameters
+        ----------
+        msg : `dict`
+            Contents of the startIntegration message
         """
         ack_id = await self.get_next_ack_id()
 
         # first we send a message to the archiver, to obtain the correct target directory
-        msg = self.build_archiver_message(ack_id, data)
-        LOGGER.info(f"transmit_startIntegration msg = {msg}")
+        m = self.build_archiver_message(ack_id, msg)
+        LOGGER.info(f"transmit_startIntegration msg = {m}")
 
-        await self.publish_message(self.ARCHIVE_CTRL_CONSUME_QUEUE, msg)
+        await self.publish_message(self.ARCHIVE_CTRL_CONSUME_QUEUE, m)
 
         # now we set up a wait for the ack. If the ack doesn't appear within the time 
         # frame allotted, a fault is thrown.  Otherwise, when the ack message is received,
@@ -517,7 +615,12 @@ class MessageDirector(Director):
             task = asyncio.create_task(waiter.pause(code, report))
 
     async def process_xfer_params_ack(self, msg):
-        """ Handle xfer_params_ack message
+        """Handle xfer_params_ack message
+
+        Parameters
+        ----------
+        msg : `dict`
+            Contents of the xfer_params message
         """
         ack_id = msg["ACK_ID"]
         LOGGER.info(f"startIntegration ack_id = {ack_id} received")
@@ -526,15 +629,19 @@ class MessageDirector(Director):
     #
     # endReadout
     #
-    async def transmit_endReadout(self, data):
+    async def transmit_endReadout(self, msg):
         """transmit endReadout to the forwarder
-        @param data: the contents of the endReadout CSC message
+
+        Parameters
+        ----------
+        msg : `dict`
+            Contents of the endReadout CSC message
         """
         ack_id = await self.get_next_ack_id()
 
-        msg = self.build_endReadout_message(ack_id, data)
-        LOGGER.info(f"transmit_endReadout msg = {msg}")
-        await self.publish_message(self.forwarder_consume_queue, msg)
+        m = self.build_endReadout_message(ack_id, msg)
+        LOGGER.info(f"transmit_endReadout msg = {m}")
+        await self.publish_message(self.forwarder_consume_queue, m)
 
         evt = await self.create_event(ack_id)
         if self.wait_for_ack_timeouts:
@@ -553,14 +660,14 @@ class MessageDirector(Director):
     #
     # largeFileObjectAvailable
     #
-    async def transmit_largeFileObjectAvailable(self, data):
+    async def transmit_largeFileObjectAvailable(self, msg):
         """transmit largeFileObjectAvailable to the forwarder
         @param data: the contents of the largeFileObjectAvailable CSC message
         """
         ack_id = await self.get_next_ack_id()
-        msg = self.build_largeFileObjectAvailable_message(ack_id, data)
-        LOGGER.info(f"transmit_largeFileObjectAvailable msg = {msg}")
-        await self.publish_message(self.forwarder_consume_queue, msg)
+        m = self.build_largeFileObjectAvailable_message(ack_id, msg)
+        LOGGER.info(f"transmit_largeFileObjectAvailable msg = {m}")
+        await self.publish_message(self.forwarder_consume_queue, m)
 
         evt = await self.create_event(ack_id)
         if self.wait_for_ack_timeouts:
@@ -580,6 +687,18 @@ class MessageDirector(Director):
     # Heartbeat
     #
     async def emit_heartbeat(self, component_name, queue, msg_type, heartbeat_event):
+        """
+        Parameters
+        ----------
+        component_name : `str`
+            Used to name which component the archiver is in a heartbeat relationship with
+        queue : `str`
+            Name of the RabbitMQ used to publish a heartbeat message 
+        msg_type : `str`
+            The message type
+        heartbeat_event : `asyncio.Event`
+            Event used to flag heartbeat failures
+        """
         try:
             LOGGER.info(f"starting heartbeat with {component_name} on {queue}")
 

@@ -25,12 +25,25 @@ import logging
 LOGGER = logging.getLogger(__name__)
 
 class Beacon:
+    """Beacon used to continually update status of the running service to inform the forwarder
+    of it's "alive" state.
+
+    Parameter
+    ---------
+    evt : `asyncio.Event`
+        Event used to flag shutdown
+    scoreboard : `lsst.dm.csc.base.scoreboard`
+        Scoreboard to update
+    """
     def __init__(self, evt, scoreboard):
         self.evt = evt
         self.evt.clear()
         self.scoreboard = scoreboard
 
     async def ping(self, forwarder_info, seconds_to_expire, seconds_to_update):
+        """Continously update forwarder association info every `seconds_to_update`, setting the expiration
+        time to `seconds_to_expire`.  Note that seconds_to_update should be less than seconds_to_expire.
+        """
         while True:
             if self.evt.is_set(): # if this is set, we were asked to shut down.
                 LOGGER.info(f"stopping beacon for {forwarder_info.hostname}")

@@ -29,6 +29,14 @@ LOGGER = logging.getLogger(__name__)
 
 class Director(base):
     """Base class for methods which include transactional information
+    Parameters
+    ----------
+    name : `str`
+        name of this device
+    config_filename : `str`
+        YAML configuration file name
+    log_filename : `str`
+        file name to which logs will be written
     """
     def __init__(self, name, config_filename, log_filename):
         super().__init__(name, config_filename, log_filename)
@@ -55,7 +63,15 @@ class Director(base):
 
     async def create_event(self, ack_id):
         """Create an event using the ack_id, and store it in a cache
-        @param ack_id: id to use to identify event
+
+        Parameters
+        ----------
+         ack_id : `str`
+            id to use to identify event
+
+        Returns
+        -------
+        asyncio.Event
         """
         evt = asyncio.Event()
         async with self._event_map_lock:
@@ -64,7 +80,15 @@ class Director(base):
 
     async def clear_event(self, ack_id):
         """Remove an event from the cache and clear it
-        @param ack_id: id to use to identify event
+
+        Parameters
+        ----------
+        ack_id : `str`
+            id to use to identify event
+
+        Returns
+        -------
+        asyncio.Event
         """
         evt = await self.retrieve_event(ack_id)
         if evt is None:
@@ -75,7 +99,15 @@ class Director(base):
         
     async def retrieve_event(self, ack_id):
         """Remove an event from the cache
-        @param ack_id: id to use to identify event
+
+        Parameters
+        ----------
+        ack_id : `str`
+            id to use to identify event
+
+        Returns
+        -------
+        asyncio.Event
         """
         evt = None
         async with self._event_map_lock:
@@ -85,7 +117,10 @@ class Director(base):
 
     async def get_next_ack_id(self):
         """Create a unique ID
-        @return: a unique id
+
+        Returns
+        -------
+        a unique id
         """
         ack_id_val = 0
         async with self._ack_lock:
@@ -95,25 +130,34 @@ class Director(base):
         return ack_id
 
     def initialize_session(self):
-        """initialize the session id and jobnum.
+        """Initialize the session id and jobnum.
         """
         self.session_id = str(datetime.datetime.now()).replace(' ','_')
         self.jobnum = 0
 
     def get_session_id(self):
         """Returns the session id
-        @return: the current session id
+        Returns
+        -------
+        the current session id
         """
         return self.session_id
 
     def get_jobnum(self):
         """Returns the current job number
+
+        Returns
+        -------
+        The current job number
         """
         return self.jobnum
 
     def get_next_jobnum(self):
-        """gets a new job number
-        @return: a job number
+        """Gets a new job number
+
+        Returns
+        -------
+        A new job number
         """
         self.jobnum += 1
         return self.jobnum

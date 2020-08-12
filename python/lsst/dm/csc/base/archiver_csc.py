@@ -30,6 +30,8 @@ LOGGER = logging.getLogger(__name__)
 
 
 class ArchiverCSC(dm_csc):
+    """
+    """
 
     def __init__(self, name, index, schema_path=None, config_dir=None,
                  initial_state=salobj.State.STANDBY, initial_simulation_mode=0):
@@ -37,6 +39,8 @@ class ArchiverCSC(dm_csc):
                          initial_state=initial_state, initial_simulation_mode=initial_simulation_mode)
 
     async def send_imageRetrievalForArchiving(self, camera, archiverName, dictionary):
+        """
+        """
         obsid = dictionary['OBSID']
         raft = "undef"
         if 'RAFT' in dictionary:
@@ -50,7 +54,8 @@ class ArchiverCSC(dm_csc):
         self.evt_imageRetrievalForArchiving.set_put(camera=camera, obsid=obsid, raft=raft, sensor=sensor, archiverName=archiverName, statusCode=statusCode, description=description)
 
     async def send_imageInOODS(self, dictionary):
-
+        """
+        """
         camera = dictionary['CAMERA']
         archiverName = dictionary['ARCHIVER']
         obsid = dictionary['OBSID']
@@ -73,26 +78,35 @@ class ArchiverCSC(dm_csc):
                                      description=description)
 
     async def start_services(self):
+        """Start all support services
+        """
         await self.director.start_services()
 
     async def stop_services(self):
+        """Stop all support services
+        """
         await self.director.stop_services()
 
-    async def do_resetFromFault(self, data):
-        print("do_resetFromFault called")
-        print(data)
-
     async def startIntegrationCallback(self, data):
+        """Send the startIntegration message to the Forwarder
+        """
         self.assert_enabled("startIntegration")
         LOGGER.info("startIntegration callback")
+        # message actually sent by the director 
         await self.director.transmit_startIntegration(data)
 
     async def endReadoutCallback(self, data):
+        """Send the endReadout message to the Forwarder
+        """
         self.assert_enabled("endReadout")
         LOGGER.info("endReadout")
+        # message actually sent by the director 
         await self.director.transmit_endReadout(data)
 
     async def largeFileObjectAvailableCallback(self, data):
+        """Send the largeFileObjectAvailable  message to the Forwarder
+        """
         self.assert_enabled("largeFileObjectAvailable")
         LOGGER.info("largeFileObjectAvailable")
+        # message actually sent by the director 
         await self.director.transmit_largeFileObjectAvailable(data)

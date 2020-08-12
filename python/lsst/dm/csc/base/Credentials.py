@@ -31,18 +31,50 @@ LOGGER = logging.getLogger(__name__)
 
 
 class Credentials:
+    """Represents credential information for RabbitMQ authentication
+
+    Parameters
+    ----------
+    filename : `str`
+        The YAML file name of the file containing credential information
+    """
 
     def __init__(self, filename):
         self.cred = self.loadSecureFile(filename)
 
     def getUser(self, user_alias):
+        """Get the user name of the RabbitMQ user
+        Parameters
+        ----------
+        user_alias : `str`
+            user alias
+
+        Returns
+        -------
+        The RabbitMQ user name
+        """
         return self.cred['rabbitmq_users'][user_alias]
 
     def getPasswd(self, passwd_alias):
+        """Get the password of the RabbitMQ user
+        Parameters
+        ----------
+        password_alias : `str`
+            password alias
+
+        Returns
+        -------
+        The RabbitMQ password
+        """
         return self.cred['rabbitmq_users'][passwd_alias]
 
     def loadSecureFile(self, cred_file):
-        """load a secure YAML file"""
+        """Load a secure YAML file. The file must be in a secure directory
+
+        Returns
+        -------
+        A dictionary containing creditial information
+        """
 
         if "IIP_CREDENTIAL_DIR" in os.environ:
             config_dir = os.environ["IIP_CREDENTIAL_DIR"]

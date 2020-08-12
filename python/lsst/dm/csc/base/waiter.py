@@ -25,6 +25,18 @@ import logging
 LOGGER = logging.getLogger(__name__)
 
 class Waiter:
+    """Waiter is use to briefly pause while other work is going on.  If
+    a fault occurs during this time, report the error through the archiver_csc
+
+    Parameters
+    ----------
+    evt : `asyncio.Event`
+        flag to indicate fault
+    parent: `lsst.dm.csc.base.archiver_csc`
+        the calling archiver_csc
+    timeout: `int`
+        time in seconds to pause
+    """
 
     def __init__(self, evt, parent, timeout):
         self.evt = evt
@@ -33,6 +45,16 @@ class Waiter:
         self.timeout = timeout
 
     async def pause(self, code, report):
+        """Sleep for a short time; if a failure occurred during this time,
+        report it
+
+        Parameters
+        ----------
+        code : `int`
+            fault code
+        report : `str`
+            Description of what happened in this fault
+        """
         await asyncio.sleep(self.timeout)
         if self.evt.is_set():
             self.parent.call_fault(code=code, report=report)
