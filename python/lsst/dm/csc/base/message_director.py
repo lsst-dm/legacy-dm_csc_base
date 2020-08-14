@@ -21,7 +21,6 @@
 
 import asyncio
 import logging
-import traceback
 from lsst.dm.csc.base.publisher import Publisher
 from lsst.dm.csc.base.consumer import Consumer
 from lsst.dm.csc.base.director import Director
@@ -49,7 +48,7 @@ class MessageDirector(Director):
 
         self._msg_actions = {}
 
-        config = self.getConfiguration()
+        self.getConfiguration()
 
         self.ARCHIVE_CONTROLLER_NAME = None
         self.FWDR_HEALTH_CHECK_ACK = None
@@ -70,7 +69,7 @@ class MessageDirector(Director):
         self.ARCHIVE_CTRL_CONSUME_QUEUE = None
         self.TELEMETRY_QUEUE = None
 
-        # if wait_for_ack_timeouts is set to True, then a timer is started 
+        # if wait_for_ack_timeouts is set to True, then a timer is started
         # when a message is sent to the Forwarder.  The Forwarder is exxpected
         # to respond within that timeout window or the archiver will go into
         # a fault state
@@ -97,7 +96,9 @@ class MessageDirector(Director):
             LOGGER.info(f'message ack timeout set to {self.ack_timeout}')
         else:
             self.ack_timeout = 5
-            LOGGER.info(f'ACK_TIMEOUT not specified in configuation file; default message ack timeout set to {self.ack_timeout}')
+            sinfo = 'ACK_TIMEOUT not specified in configuation file; '
+            sinfo = sinfo + f'default message ack timeout set to {self.ack_timeout}'
+            LOGGER.info(sinfo)
 
         self.redis_host = root["REDIS_HOST"]
         self.redis_db = root["ARCHIVER_REDIS_DB"]
@@ -147,7 +148,8 @@ class MessageDirector(Director):
 
         self.services_started_evt.set()
         try:
-            self.scoreboard = Archiveboard(self._name, db=self.redis_db, host=self.redis_host, key=self.ASSOCIATION_KEY)
+            self.scoreboard = Archiveboard(self._name, db=self.redis_db, host=self.redis_host,
+                                           key=self.ASSOCIATION_KEY)
         except Exception as e:
             LOGGER.info(e)
             msg = "scoreboard could't establish connection with redis broker"
@@ -159,7 +161,7 @@ class MessageDirector(Director):
             forwarder_info = self.scoreboard.pop_forwarder_from_list()
 
             LOGGER.info(f"pairing with forwarder {forwarder_info.hostname}")
-        except Exception as e:
+        except Exception:
             msg = f"no forwarder on forwarder_list in redis db {self.redis_db} on {self.redis_host}"
             self.parent.call_fault(5701, msg)
             return
@@ -195,9 +197,10 @@ class MessageDirector(Director):
         await self.setup_consumers()
 
         self.archive_heartbeat_task = asyncio.create_task(self.emit_heartbeat(self.ARCHIVE_CONTROLLER_NAME,
-                                                                               self.ARCHIVE_CTRL_CONSUME_QUEUE,
-                                                                               "ARCHIVE_HEALTH_CHECK",
-                                                                               self.archive_heartbeat_evt))
+                                                                              self.ARCHIVE_CTRL_CONSUME_QUEUE,
+                                                                              "ARCHIVE_HEALTH_CHECK",
+                                                                              self.archive_heartbeat_evt))
+
     async def rescind_connections(self):
         """Stop non-CSC messaging connections
         """
@@ -244,7 +247,8 @@ class MessageDirector(Director):
         """Create ThreadManager object with base broker url and kwargs to setup consumers.
         """
         # message from OODS
-        self.oods_consumer = Consumer(self.base_broker_url, self.parent, self.OODS_CONSUME_QUEUE, self.on_message)
+        self.oods_consumer = Consumer(self.base_broker_url, self.parent, self.OODS_CONSUME_QUEUE,
+                                      self.on_message)
         self.oods_consumer.start()
 
         # messages from ArchiverController
@@ -253,12 +257,12 @@ class MessageDirector(Director):
         self.archive_consumer.start()
 
         # ack messages from Forwarder & ArchiveController
-        self.forwarder_consumer = Consumer(self.base_broker_url,  self.parent, self.forwarder_publish_queue,
+        self.forwarder_consumer = Consumer(self.base_broker_url, self.parent, self.forwarder_publish_queue,
                                            self.on_message)
         self.forwarder_consumer.start()
 
         # telemetry messages from forwarder
-        self.telemetry_consumer = Consumer(self.base_broker_url,  self.parent, self.TELEMETRY_QUEUE,
+        self.telemetry_consumer = Consumer(self.base_broker_url, self.parent, self.TELEMETRY_QUEUE,
                                            self.on_telemetry)
         self.telemetry_consumer.start()
 
@@ -285,7 +289,7 @@ class MessageDirector(Director):
         ch.basic_ack(method.delivery_tag)
         if msg_type in self._msg_actions:
             handler = self._msg_actions.get(msg_type)
-            task = asyncio.create_task(handler(body))
+            asyncio.create_task(handler(body))
         else:
             LOGGER.error(f"Unknown MSG_TYPE: {msg_type}")
 
@@ -295,7 +299,8 @@ class MessageDirector(Director):
         LOGGER.info(f"message was: {body}")
         ch.basic_ack(method.delivery_tag)
 
-        task = asyncio.create_task(self.parent.send_imageRetrievalForArchiving(self.CAMERA_NAME, self.ARCHIVER_NAME, body))
+        asyncio.create_task(self.parent.send_imageRetrievalForArchiving(self.CAMERA_NAME,
+                                                                        self.ARCHIVER_NAME, body))
 
     async def send_ingest_message_to_oods(self, msg):
         """Transmit an ingestion request message to the OODS
@@ -336,7 +341,7 @@ class MessageDirector(Director):
             contents of image_in_oods message
         """
         LOGGER.info(f"msg received: {msg}")
-        task = asyncio.create_task(self.parent.send_imageInOODS(msg))
+        asyncio.create_task(self.parent.send_imageInOODS(msg))
 
     async def process_items_xferd_ack(self, msg):
         """ Handle at_items_xferd_ack message
@@ -387,7 +392,7 @@ class MessageDirector(Director):
         evt = await self.create_event(ack_id)
         waiter = Waiter(evt, self.parent, self.ack_timeout)
         self.startIntegration_ack_task = asyncio.create_task(waiter.pause(code, report))
-        
+
     def send_telemetry(self, status_code, description):
         """Send telemetry
 
@@ -431,7 +436,6 @@ class MessageDirector(Director):
 
         d['imageName'] = data.imageName
         d['imageIndex'] = data.imageIndex
-        #d['imageSequenceName'] = data.imageSequenceName
         d['imagesInSequence'] = data.imagesInSequence
         d['imageDate'] = data.imageDate
         d['exposureTime'] = data.exposureTime
@@ -537,10 +541,9 @@ class MessageDirector(Director):
         else:
             LOGGER.info("Missing ACK_ID in association message.")
             return
-        
-        watcher = Watcher(self.stop_watcher_evt, self.parent, self.scoreboard)
-        watcher_task = asyncio.create_task(watcher.peek(msg['ASSOCIATION_KEY'], self.seconds_to_expire))
 
+        watcher = Watcher(self.stop_watcher_evt, self.parent, self.scoreboard)
+        asyncio.create_task(watcher.peek(msg['ASSOCIATION_KEY'], self.seconds_to_expire))
 
     async def process_new_item_ack(self, msg):
         """Handle incoming new_at_item_ack message
@@ -552,9 +555,9 @@ class MessageDirector(Director):
         """
         ack_id = msg["ACK_ID"]
         LOGGER.info(f"process_new_item_ack ack_id = {ack_id} received")
-        evt = await self.clear_event(ack_id)
+        await self.clear_event(ack_id)
         # this is scheduled, since process_new_item_ack is never await-ed
-        task = asyncio.create_task(self.send_startIntegration(msg))
+        asyncio.create_task(self.send_startIntegration(msg))
 
     async def send_startIntegration(self, msg):
         """Send the startIntegration message to the forwarder
@@ -577,7 +580,7 @@ class MessageDirector(Director):
 
             # creates a timer waiting for an acknowledgement
             waiter = Waiter(evt, self.parent, self.ack_timeout)
-            task = asyncio.create_task(waiter.pause(code, report))
+            asyncio.create_task(waiter.pause(code, report))
 
     #
     # startIntegration
@@ -601,7 +604,7 @@ class MessageDirector(Director):
 
         await self.publish_message(self.ARCHIVE_CTRL_CONSUME_QUEUE, m)
 
-        # now we set up a wait for the ack. If the ack doesn't appear within the time 
+        # now we set up a wait for the ack. If the ack doesn't appear within the time
         # frame allotted, a fault is thrown.  Otherwise, when the ack message is received,
         # the data is extracted within the "process_new_item_ack" method, and the
         # "startIntegration" message is build and sent to the forwarder from that method
@@ -612,7 +615,7 @@ class MessageDirector(Director):
             report = f"No ack response from at archive controller"
 
             waiter = Waiter(evt, self.parent, self.ack_timeout)
-            task = asyncio.create_task(waiter.pause(code, report))
+            asyncio.create_task(waiter.pause(code, report))
 
     async def process_xfer_params_ack(self, msg):
         """Handle xfer_params_ack message
@@ -624,7 +627,7 @@ class MessageDirector(Director):
         """
         ack_id = msg["ACK_ID"]
         LOGGER.info(f"startIntegration ack_id = {ack_id} received")
-        evt = await self.clear_event(ack_id)
+        await self.clear_event(ack_id)
 
     #
     # endReadout
@@ -648,14 +651,14 @@ class MessageDirector(Director):
             code = 5753
             report = f"No endReadout ack from forwarder. Setting fault state with code = {code}"
             waiter = Waiter(evt, self.parent, self.ack_timeout)
-            task = asyncio.create_task(waiter.pause(code, report))
+            asyncio.create_task(waiter.pause(code, report))
 
     async def process_fwdr_end_readout_ack(self, msg):
         """ Handle at_fwder_end_readout_ack message
         """
         ack_id = msg["ACK_ID"]
         LOGGER.info(f"endReadout ack_id = {ack_id} received")
-        evt = await self.clear_event(ack_id)
+        await self.clear_event(ack_id)
 
     #
     # largeFileObjectAvailable
@@ -674,14 +677,14 @@ class MessageDirector(Director):
             code = 5754
             report = f"No largeFileObjectAvailable ack from forwarder. Setting fault state with code = {code}"
             waiter = Waiter(evt, self.parent, self.ack_timeout)
-            task = asyncio.create_task(waiter.pause(code, report))
+            asyncio.create_task(waiter.pause(code, report))
 
     async def process_header_ready_ack(self, msg):
         """ Handle header_ready_ack message
         """
         ack_id = msg["ACK_ID"]
         LOGGER.info(f"largeFileObjectAvailable ack_id = {ack_id} received")
-        evt = await self.clear_event(ack_id)
+        await self.clear_event(ack_id)
 
     #
     # Heartbeat
@@ -693,7 +696,7 @@ class MessageDirector(Director):
         component_name : `str`
             Used to name which component the archiver is in a heartbeat relationship with
         queue : `str`
-            Name of the RabbitMQ used to publish a heartbeat message 
+            Name of the RabbitMQ used to publish a heartbeat message
         msg_type : `str`
             The message type
         heartbeat_event : `asyncio.Event`
@@ -714,8 +717,8 @@ class MessageDirector(Director):
                 LOGGER.debug(f"about to send {msg}")
                 await pub.publish_message(queue, msg)
 
-                code=5751
-                report=f"failed to received heartbeat ack from {component_name}"
+                code = 5751
+                report = f"failed to received heartbeat ack from {component_name}"
 
                 waiter = Waiter(heartbeat_event, self.parent, self.ack_timeout)
                 heartbeat_task = asyncio.create_task(waiter.pause(code, report))
@@ -725,7 +728,7 @@ class MessageDirector(Director):
                     return
         except asyncio.CancelledError:
             await pub.stop()
-        except Exception as e:
+        except Exception:
             await pub.stop()
             self.parent.call_fault(code=5751, report=f"failed to publish message to {queue}")
             return

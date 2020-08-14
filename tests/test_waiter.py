@@ -19,17 +19,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import asyncio
-import os
-import unittest
 import asynctest
-import pytest
 
-import lsst.utils.tests
 from lsst.dm.csc.base.waiter import Waiter
+
 
 class Parent:
     def call_fault(self, code, report):
         raise Exception("exception")
+
 
 class WaiterTestCase(asynctest.TestCase):
 
@@ -46,4 +44,3 @@ class WaiterTestCase(asynctest.TestCase):
         w = Waiter(evt, parent, 2)
         evt.clear()
         await w.pause(1, "report placeholder")
-

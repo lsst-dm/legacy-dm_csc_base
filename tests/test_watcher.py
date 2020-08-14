@@ -19,29 +19,30 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import asyncio
-import os
-import unittest
 import asynctest
-import pytest
 
-import lsst.utils.tests
 from lsst.dm.csc.base.watcher import Watcher
+
 
 class WatcherParent:
     def call_fault(self, code, report):
         raise Exception("exception")
 
+
 class WatcherParent2:
     def call_fault(self, code, report):
         return
+
 
 class WatcherScoreboard1:
     def check_forwarder_presence(self, key):
         return self
 
+
 class WatcherScoreboard2:
     def check_forwarder_presence(self, key):
         return None
+
 
 class WatcherTestCase(asynctest.TestCase):
 
@@ -51,7 +52,7 @@ class WatcherTestCase(asynctest.TestCase):
         board = WatcherScoreboard1()
 
         w = Watcher(evt, parent, board)
-        task = asyncio.create_task(self.pause(evt,2))
+        asyncio.create_task(self.pause(evt, 2))
         await w.peek(None, 1)
 
     async def pause(self, evt, seconds):

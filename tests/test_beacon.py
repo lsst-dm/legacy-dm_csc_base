@@ -19,18 +19,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import asyncio
-import os
-import unittest
 import asynctest
-import pytest
 
-import lsst.utils.tests
 from lsst.dm.csc.base.beacon import Beacon
 from lsst.dm.csc.base.forwarder_info import ForwarderInfo
 
+
 class BeaconScoreboard:
     def set_forwarder_association(self, hostname, expire):
-        return 
+        return
+
     def delete_forwarder_association(self):
         return
 
@@ -43,7 +41,7 @@ class WatcherTestCase(asynctest.TestCase):
         info = ForwarderInfo("localhost", "127.0.0.1", None)
 
         beacon = Beacon(evt, board)
-        task = asyncio.create_task(self.pause(evt,2))
+        asyncio.create_task(self.pause(evt, 2))
         await beacon.ping(info, 5, 1)
 
     async def pause(self, evt, seconds):

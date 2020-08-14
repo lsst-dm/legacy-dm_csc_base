@@ -24,7 +24,6 @@ import logging
 import os
 import os.path
 import stat
-import sys
 import yaml
 
 LOGGER = logging.getLogger(__name__)

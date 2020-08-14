@@ -24,6 +24,7 @@ import logging
 
 LOGGER = logging.getLogger(__name__)
 
+
 class Waiter:
     """Waiter is use to briefly pause while other work is going on.  If
     a fault occurs during this time, report the error through the archiver_csc

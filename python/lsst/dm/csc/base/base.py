@@ -24,7 +24,6 @@ import logging
 from logging.handlers import RotatingFileHandler
 import os
 import os.path
-import signal
 import sys
 import time
 import yaml
@@ -33,7 +32,7 @@ from lsst.dm.csc.base.Credentials import Credentials
 LOGGER = logging.getLogger(__name__)
 
 
-class base:
+class Base:
     """Base class which sets up logging, configuration and credentials
 
     Parameters
@@ -149,24 +148,27 @@ class base:
             else:
                 log_dir = None
 
-        FORMAT = ('%(levelname) -10s %(asctime)s.%(msecs)03dZ %(name) -30s %(funcName) -35s %(lineno) -5d: %(message)s')
+        f = '%(levelname) -10s %(asctime)s.%(msecs)03dZ %(name) -30s %(funcName) '
+        f = f + '-35s %(lineno) -5d: %(message)s'
+        FORMAT = (f)
         LOGGER = logging.getLogger(__name__)
         logging.Formatter.converter = time.gmtime
         LOGGER.setLevel(logging.DEBUG)
 
         if log_dir is None:
-            # if we're here, there was no LOGGING_DIR entry in the config file, 
+            # if we're here, there was no LOGGING_DIR entry in the config file,
             # and IIP_LOG_DIR hasn't been set.  Therefore, write to stdout.
             handler = logging.StreamHandler(sys.stdout)
-            LOGGER.addHandler(handler) 
+            LOGGER.addHandler(handler)
             logging.basicConfig(level=logging.INFO, format=FORMAT, datefmt="%Y-%m-%d %H:%M:%S")
-        else: 
-            # if we're here, either LOGGING_DIR was set, or IIP_LOG_DIR was set, so write files to 
+        else:
+            # if we're here, either LOGGING_DIR was set, or IIP_LOG_DIR was set, so write files to
             # the directory that was indicated.
             log_file = os.path.join(log_dir, filename)
             handler = RotatingFileHandler(log_file, maxBytes=2000000, backupCount=10)
             LOGGER.addHandler(handler)
-            logging.basicConfig(filename=log_file, level=logging.INFO, format=FORMAT, datefmt="%Y-%m-%d %H:%M:%S")
+            logging.basicConfig(filename=log_file, level=logging.INFO, format=FORMAT,
+                                datefmt="%Y-%m-%d %H:%M:%S")
 
     def shutdown(self):
         """Shutdown all services

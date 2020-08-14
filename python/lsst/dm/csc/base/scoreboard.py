@@ -55,7 +55,7 @@ class Scoreboard:
         """Get the device state
 
         Returns
-        ------- 
+        -------
         The device state
         """
         return self.conn.hget(self.device, self.STATE)
@@ -74,7 +74,7 @@ class Scoreboard:
         """Set the session identifier
 
         Returns
-        ------- 
+        -------
         The session identifier
         """
         self.conn.hset(self.device, self.SESSION, session)

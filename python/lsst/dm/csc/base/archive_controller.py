@@ -28,12 +28,12 @@ import os.path
 import sys
 from lsst.dm.csc.base.consumer import Consumer
 from lsst.dm.csc.base.publisher import Publisher
-from lsst.dm.csc.base.base import base
+from lsst.dm.csc.base.base import Base
 
 LOGGER = logging.getLogger(__name__)
 
 
-class ArchiveController(base):
+class ArchiveController(Base):
     """Controller service for the Archiver that coordinates where
     files are staged by the Forwarder
 
@@ -56,8 +56,6 @@ class ArchiveController(base):
         # set all YAML configuration information
         cdm = self.getConfiguration()
         root = cdm['ROOT']
-        redis_host = root['REDIS_HOST']
-        redis_db = root['ARCHIVER_REDIS_DB']
         self.forwarder_publish_queue = root['FORWARDER_PUBLISH_QUEUE']
         self.oods_publish_queue = root['OODS_PUBLISH_QUEUE']
         self.archive_ctrl_publish_queue = root['ARCHIVE_CTRL_PUBLISH_QUEUE']
@@ -98,7 +96,6 @@ class ArchiveController(base):
         # set the address for the RabbitMQ broker
         self.base_broker_addr = root["BASE_BROKER_ADDR"]
 
-
         # retrieve the credentials for RabbitMQ
         cred = self.getCredentials()
 
@@ -130,7 +127,7 @@ class ArchiveController(base):
         """Create all RabbitMQ message publishers
         """
         LOGGER.info("Setting up ArchiveController publisher")
-        self.publisher = Publisher(self.base_broker_url, csc_parent=None,  logger_level=LOGGER.debug)
+        self.publisher = Publisher(self.base_broker_url, csc_parent=None, logger_level=LOGGER.debug)
         await self.publisher.start()
 
     async def stop_publishers(self):
@@ -164,7 +161,7 @@ class ArchiveController(base):
         self.stop_consumers()
 
     def on_message(self, ch, method, properties, body):
-        """Callback method for all incoming messages. 
+        """Callback method for all incoming messages.
         Specific callbacks are indexed by MSG_TYPE in the message body, and call methods
         registered in self._msg_actions
 
@@ -195,7 +192,7 @@ class ArchiveController(base):
         handler = self._msg_actions.get(body['MSG_TYPE'])
 
         loop = asyncio.get_event_loop()
-        task = loop.create_task(handler(body))
+        loop.create_task(handler(body))
 
     def build_new_item_ack_message(self, target_dir, incoming_msg):
         """create an "new archive item ack" message for the Forwarder, telling it where the target directory
@@ -225,7 +222,7 @@ class ArchiveController(base):
         return d
 
     def build_health_ack_message(self, incoming_msg):
-        """create an ARCHIVE_HEALTH_CHECK_ACK message 
+        """create an ARCHIVE_HEALTH_CHECK_ACK message
 
         Parameters
         ----------
@@ -246,7 +243,7 @@ class ArchiveController(base):
         return d
 
     def construct_send_target_dir(self, target_dir):
-        """creates the target directory including a day stamp which will be used by the 
+        """creates the target directory including a day stamp which will be used by the
         Forwarder to write files
 
         Parameters
@@ -350,11 +347,11 @@ class ArchiveController(base):
             LOGGER.info(f'{e}')
             # send an error that an error occurred trying to set up for the ingest into the OODS
             err = f"Couldn't create link for OODS: {e}"
-            task = asyncio.create_task(self.send_oods_failure_message(msg, err))
+            asyncio.create_task(self.send_oods_failure_message(msg, err))
             return
         # send an message to the OODS to ingest the file
         msg['FILENAME'] = oods_file
-        task = asyncio.create_task(self.send_ingest_message_to_oods(msg))
+        asyncio.create_task(self.send_ingest_message_to_oods(msg))
 
     def create_link_to_file(self, filename, dirname):
         """Create a link from filename to a new file in directory dirname
@@ -387,7 +384,7 @@ class ArchiveController(base):
         return new_file
 
     def create_links_to_file(self, forwarder_filename):
-        """Create links from the forwarder file to data backbone and OODS staging directories, 
+        """Create links from the forwarder file to data backbone and OODS staging directories,
         and removes the file if all files are successfully linked.
 
         Parameters

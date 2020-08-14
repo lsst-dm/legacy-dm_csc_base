@@ -20,22 +20,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import os
-import unittest
 import asynctest
 
 import lsst.utils.tests
 from lsst.dm.csc.base.message_director import MessageDirector
-from lsst.dm.csc.base.forwarder_info import ForwarderInfo
-from lsst.dm.csc.base.archiveboard import Archiveboard
 
 
 class Parent:
     def call_fault(self, code, msg):
         pass
 
+
 class Failure:
     def call_fault(self, code, msg):
         raise Exception("fail")
+
 
 class MessageDirectorTestCase(asynctest.TestCase):
 
@@ -82,21 +81,3 @@ class MessageDirectorTestCase(asynctest.TestCase):
         with self.assertRaises(Exception):
             await md.start_services()
         os.unlink(os.path.join("/tmp", logname))
-
-    #async def test_connection(self):
-    #    parent = Parent()
-    #    logname = f"test_{os.getpid()}_connection.log"
-    #    package = lsst.utils.getPackageDir("dm_csc_base")
-    #    os.environ["IIP_CONFIG_DIR"] = os.path.join(package, "tests", "files", "etc", "config")
-    #    os.environ["IIP_CREDENTIAL_DIR"] = os.path.join(package, "tests", "files")
-    #    md = MessageDirector(parent, "test", "config.yaml", logname)
-
-    #    md.configure()
-    #    ab = Archiveboard("test",1,"localhost")
-        
-    #    info = ForwarderInfo("localhost", "127.0.0.1", "CONSUME_QUEUE")
-    #    ab.push_forwarder_onto_list(info)
-       
-    #    with self.assertRaises(Exception):
-    #        await md.start_services()
-    #    os.unlink(os.path.join("/tmp", logname))

@@ -26,6 +26,13 @@ import datetime
 
 
 class YamlHandler:
+    """Handler for YAML data
+    Parameters
+
+    ----------
+    callback : `Method`
+        method to call when message is decoded
+    """
     def __init__(self, callback=None):
         self._consumer_callback = callback
         yaml.add_representer(datetime.time, self.dt_representer, Dumper=yaml.SafeDumper)
@@ -33,25 +40,71 @@ class YamlHandler:
         self.dateformat = "%Y:%m:%dT%H%M%S.%f"
 
     def dt_constructor(self, loader, node):
+        """A datetime constructor for incoming YAML data
+
+        Parameters
+        ----------
+        loader: `yaml.Loader`
+            loader to use to import data from a ScalarNode
+        node : `yaml.ScalarNode`
+            A YAML ScalarNode
+        """
         data = loader.construct_scalar(node)
         return datetime.datetime.strptime(data, self.dateformat)
 
     def dt_representer(self, dumper, data):
+        """Date time representation of current datetime
+
+        Parameters
+        ----------
+        dumper: yaml.Dumper
+            Use to create YAML representation of datetime
+        data: `str`
+            unused
+        """
         s = data.strftime(self.dateformat)
         return dumper.represent_scalar('datetime.time', s)
 
     def yaml_callback(self, ch, method, properties, body):
-        """ Decode the message body before consuming
-            Setting the consumer callback function
+        """Decode the message body before consuming Setting the consumer callback function
+
+        Parameters
+        ----------
+        ch : `Channel`
+        method : `Method`
+        properties : `Properties`
+        pydict : `dict`
         """
         pydict = self.decode_message(body)
         self._consumer_callback(ch, method, properties, pydict)
 
     def encode_message(self, dictValue):
+        """encode a dictionary as YAML
+
+        Parameters
+        ----------
+        dictValue : `dict`
+            Dictionary containing information to be encoded into YAML
+
+        Returns
+        -------
+        YAML string containing representation of dictValue
+        """
         pydict = deepcopy(dictValue)
         yaml_body = yaml.safe_dump(pydict)
         return yaml_body
 
     def decode_message(self, body):
+        """decode YAML into a dictionary
+
+        Parameters
+        ----------
+        body : `str`
+            YAML string
+
+        Returns
+        -------
+        A dict representation of the YAML string
+        """
         tmpdict = yaml.safe_load(body)
         return tmpdict

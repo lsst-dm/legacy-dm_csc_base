@@ -24,6 +24,7 @@ import logging
 
 LOGGER = logging.getLogger(__name__)
 
+
 class Beacon:
     """Beacon used to continually update status of the running service to inform the forwarder
     of it's "alive" state.
@@ -45,10 +46,9 @@ class Beacon:
         time to `seconds_to_expire`.  Note that seconds_to_update should be less than seconds_to_expire.
         """
         while True:
-            if self.evt.is_set(): # if this is set, we were asked to shut down.
+            if self.evt.is_set():  # if this is set, we were asked to shut down.
                 LOGGER.info(f"stopping beacon for {forwarder_info.hostname}")
                 self.scoreboard.delete_forwarder_association()
                 return
-            self.scoreboard.set_forwarder_association(forwarder_info.hostname,seconds_to_expire)
+            self.scoreboard.set_forwarder_association(forwarder_info.hostname, seconds_to_expire)
             await asyncio.sleep(seconds_to_update)
-

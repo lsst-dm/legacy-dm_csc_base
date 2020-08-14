@@ -20,11 +20,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import os
-import unittest
 import asynctest
 
 import lsst.utils.tests
 from lsst.dm.csc.base.director import Director
+
 
 class DirectorTestCase(asynctest.TestCase):
 
@@ -38,13 +38,12 @@ class DirectorTestCase(asynctest.TestCase):
         evt1 = await d.create_event("id1")
         evt2 = await d.retrieve_event("id1")
         self.assertEqual(evt1, evt2)
-        
-        evt3 = await d.create_event("id2")
-        evt4 = await d.clear_event("id2")
-        self.assertTrue(evt4.is_set() == False)
 
-        evt5 = await d.clear_event("id3")
-        self.assertIsNone(evt5)
+        evt3 = await d.clear_event("id2")
+        self.assertFalse(evt3.is_set())
+
+        evt4 = await d.clear_event("id3")
+        self.assertIsNone(evt4)
         os.unlink(os.path.join("/tmp", logname))
 
     async def test_ack_id(self):
@@ -63,7 +62,6 @@ class DirectorTestCase(asynctest.TestCase):
         self.assertEqual(val, f"{session_id}_2")
         os.unlink(os.path.join("/tmp", logname))
 
-        
     def test_jobnum(self):
         logname = f"test_{os.getpid()}_jobnum.log"
         package = lsst.utils.getPackageDir("dm_csc_base")

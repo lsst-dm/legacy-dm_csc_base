@@ -21,15 +21,13 @@
 
 import asyncio
 import logging
-import os.path
-import traceback
 from lsst.ts.salobj import State
 from lsst.ts.salobj import ConfigurableCsc
 
 LOGGER = logging.getLogger(__name__)
 
 
-class dm_csc(ConfigurableCsc):
+class DmCSC(ConfigurableCsc):
     """This object implements configuration and the state transition model for the ConfigurableCSC
 
     Parameters
@@ -56,7 +54,6 @@ class dm_csc(ConfigurableCsc):
             State.FAULT: "fault",
             State.OFFLINE: "offline",
             State.STANDBY: "standby"}
-
 
     async def configure(self, config):
         """Configure this CSC and output the ``settingsApplied`` event.
@@ -116,7 +113,6 @@ class dm_csc(ConfigurableCsc):
             self.current_state = State.STANDBY
             return
 
-
         # if going from STANDBY to FAULT, kill any external services that started
         if (self.current_state == State.STANDBY) and (self.summary_state == State.FAULT):
             asyncio.ensure_future(self.stop_services())
@@ -172,4 +168,3 @@ class dm_csc(ConfigurableCsc):
         self.transitioning_to_fault_evt.set()
         LOGGER.info(report)
         self.fault(code, report)
-

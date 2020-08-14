@@ -115,7 +115,8 @@ class Archiveboard(Scoreboard):
             hostname = forwarder['hostname']
             ip_address = forwarder['ip_address']
             consume_queue = forwarder['consume_queue']
-            forwarder_info = ForwarderInfo(hostname=hostname, ip_address=ip_address, consume_queue=consume_queue)
+            forwarder_info = ForwarderInfo(hostname=hostname, ip_address=ip_address,
+                                           consume_queue=consume_queue)
             return forwarder_info
         except Exception as e:
             LOGGER.info("Exception: "+str(e))

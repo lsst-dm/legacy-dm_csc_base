@@ -19,17 +19,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import asyncio
 import logging
-import pathlib
-from lsst.dm.csc.base.dm_csc import dm_csc
+from lsst.dm.csc.base.dm_csc import DmCSC
 from lsst.ts import salobj
-from lsst.ts.salobj import State
 
 LOGGER = logging.getLogger(__name__)
 
 
-class ArchiverCSC(dm_csc):
+class ArchiverCSC(DmCSC):
     """
     """
 
@@ -50,8 +47,12 @@ class ArchiverCSC(dm_csc):
             sensor = dictionary['SENSOR']
         statusCode = dictionary['STATUS_CODE']
         description = dictionary['DESCRIPTION']
-        LOGGER.info(f"sending camera={camera} obsid={obsid} raft={raft} sensor={sensor}  archiverName={archiverName}, statusCode={statusCode}, description={description}")
-        self.evt_imageRetrievalForArchiving.set_put(camera=camera, obsid=obsid, raft=raft, sensor=sensor, archiverName=archiverName, statusCode=statusCode, description=description)
+        s = f'sending camera={camera} obsid={obsid} raft={raft} sensor={sensor}  '
+        s = s + f'archiverName={archiverName}, statusCode={statusCode}, description={description}'
+        LOGGER.info(s)
+        self.evt_imageRetrievalForArchiving.set_put(camera=camera, obsid=obsid, raft=raft,
+                                                    sensor=sensor, archiverName=archiverName,
+                                                    statusCode=statusCode, description=description)
 
     async def send_imageInOODS(self, dictionary):
         """
@@ -68,7 +69,9 @@ class ArchiverCSC(dm_csc):
         statusCode = dictionary['STATUS_CODE']
         description = dictionary['DESCRIPTION']
 
-        LOGGER.info(f"sending camera={camera} obsid={obsid} raft={raft} sensor={sensor}  archiverName={archiverName}, statusCode={statusCode}, description={description}")
+        s = f'sending camera={camera} obsid={obsid} raft={raft} sensor={sensor} '
+        s = s + f'archiverName={archiverName}, statusCode={statusCode}, description={description}'
+        LOGGER.info(s)
         self.evt_imageInOODS.set_put(camera=camera,
                                      obsid=obsid,
                                      raft=raft,
@@ -92,7 +95,7 @@ class ArchiverCSC(dm_csc):
         """
         self.assert_enabled("startIntegration")
         LOGGER.info("startIntegration callback")
-        # message actually sent by the director 
+        # message actually sent by the director
         await self.director.transmit_startIntegration(data)
 
     async def endReadoutCallback(self, data):
@@ -100,7 +103,7 @@ class ArchiverCSC(dm_csc):
         """
         self.assert_enabled("endReadout")
         LOGGER.info("endReadout")
-        # message actually sent by the director 
+        # message actually sent by the director
         await self.director.transmit_endReadout(data)
 
     async def largeFileObjectAvailableCallback(self, data):
@@ -108,5 +111,5 @@ class ArchiverCSC(dm_csc):
         """
         self.assert_enabled("largeFileObjectAvailable")
         LOGGER.info("largeFileObjectAvailable")
-        # message actually sent by the director 
+        # message actually sent by the director
         await self.director.transmit_largeFileObjectAvailable(data)

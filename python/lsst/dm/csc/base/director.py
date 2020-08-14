@@ -22,12 +22,12 @@
 import asyncio
 import datetime
 import logging
-from lsst.dm.csc.base.base import base
+from lsst.dm.csc.base.base import Base
 
 LOGGER = logging.getLogger(__name__)
 
 
-class Director(base):
+class Director(Base):
     """Base class for methods which include transactional information
     Parameters
     ----------
@@ -96,7 +96,7 @@ class Director(base):
         else:
             evt.clear()
         return evt
-        
+
     async def retrieve_event(self, ack_id):
         """Remove an event from the cache
 
@@ -132,7 +132,7 @@ class Director(base):
     def initialize_session(self):
         """Initialize the session id and jobnum.
         """
-        self.session_id = str(datetime.datetime.now()).replace(' ','_')
+        self.session_id = str(datetime.datetime.now()).replace(' ', '_')
         self.jobnum = 0
 
     def get_session_id(self):
