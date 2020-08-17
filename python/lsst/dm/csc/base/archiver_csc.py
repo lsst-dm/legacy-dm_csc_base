@@ -90,6 +90,11 @@ class ArchiverCSC(DmCSC):
         """
         await self.director.stop_services()
 
+    async def do_resetFromFault(self, data):
+        """resetFromFault. Required by ts_salobj csc
+        """
+        print(f"do_resetFromFault called: {data}")
+
     async def startIntegrationCallback(self, data):
         """Send the startIntegration message to the Forwarder
         """
