@@ -49,6 +49,7 @@ class Consumer(object):
 
         self._url = amqp_url
         self.csc_parent = csc_parent
+        self.EXCHANGE = 'message'
         self.QUEUE = queue
         self.ROUTING_KEY = queue
 
