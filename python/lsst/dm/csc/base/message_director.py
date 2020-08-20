@@ -405,7 +405,7 @@ class MessageDirector(Director):
         """
         msg = {}
         msg['MSG_TYPE'] = 'TELEMETRY'
-        msg['DEVICE'] = self.DEVICE
+        msg['DEVICE'] = self.SHORT_NAME
         msg['STATUS_CODE'] = status_code
         msg['DESCRIPTION'] = description
         self.publish_message(self.TELEMETRY_QUEUE, msg)
@@ -459,7 +459,7 @@ class MessageDirector(Director):
         d['MSG_TYPE'] = self.FWDR_XFER_PARAMS
         d['SESSION_ID'] = self.get_session_id()
         d['IMAGE_ID'] = data['IMAGE_ID']
-        d['DEVICE'] = 'AT'
+        d['DEVICE'] = self.SHORT_NAME
         d['JOB_NUM'] = self.get_jobnum()
         d['ACK_ID'] = ack_id
         d['REPLY_QUEUE'] = self.forwarder_publish_queue
