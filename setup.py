@@ -1,6 +1,6 @@
 from setuptools import setup, find_namespace_packages
-  
-install_requires=["pyyaml", "pika"]
+
+install_requires = ["pyyaml", "pika"]
 
 setup(
     name="dm_csc_base",

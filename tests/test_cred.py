@@ -19,11 +19,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import os
-import unittest
 import asynctest
 
 import lsst.utils.tests
 from lsst.dm.csc.base.Credentials import Credentials
+
 
 class CredentialsTestCase(asynctest.TestCase):
 
@@ -40,22 +40,23 @@ class CredentialsTestCase(asynctest.TestCase):
         del os.environ["IIP_CREDENTIAL_DIR"]
         os.environ["HOME"] = "/tmp"
         with self.assertRaises(PermissionError):
-            cred = Credentials("iip_cred.yaml")
+            Credentials("iip_cred.yaml")
         del os.environ["HOME"]
+
     def test_bad_permission_dir(self):
         os.environ["IIP_CREDENTIAL_DIR"] = os.path.join(self.package, "tests", "files", "baddir")
         with self.assertRaises(PermissionError):
-            cred = Credentials("iip_cred.yaml")
+            Credentials("iip_cred.yaml")
 
     def test_bad_dir(self):
         os.environ["IIP_CREDENTIAL_DIR"] = os.path.join(self.package, "tests", "files", "nothing")
         with self.assertRaises(PermissionError):
-            cred = Credentials("iip_cred.yaml")
+            Credentials("iip_cred.yaml")
 
     def test_bad_permissions_file(self):
         with self.assertRaises(PermissionError):
-            cred = Credentials("bad_permissions.yaml")
+            Credentials("bad_permissions.yaml")
 
     def test_missing_credential_file(self):
         with self.assertRaises(FileNotFoundError):
-            cred = Credentials("nonexistant.yaml")
+            Credentials("nonexistant.yaml")

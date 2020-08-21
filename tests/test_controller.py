@@ -19,19 +19,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import os
-import unittest
 import asynctest
+import asyncio
 
-import lsst.utils.tests
 from lsst.dm.csc.base.archive_controller import ArchiveController
 
+
 class ControllerTestChannel:
-        def basic_ack(self, tag):
-            pass
+    def basic_ack(self, tag):
+        pass
+
 
 class ControllerMethod:
-        def __init__(self):
-            self.delivery_tag = 1
+    def __init__(self):
+        self.delivery_tag = 1
+
 
 class ControllerTestCase(asynctest.TestCase):
 
@@ -50,7 +52,7 @@ class ControllerTestCase(asynctest.TestCase):
         await self.controller.configure()
         ch = ControllerTestChannel()
         method = ControllerMethod()
-    
+
         test1 = {}
         with self.assertRaises(Exception):
             self.controller.on_message(ch, method, None, test1)

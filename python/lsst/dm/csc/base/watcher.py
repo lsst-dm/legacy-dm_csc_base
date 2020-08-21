@@ -21,7 +21,15 @@
 
 import asyncio
 
+
 class Watcher:
+    """
+    Parameters
+    ----------
+    evt : `asyncio.Event`
+    parent : `lsst.dm.csc.base.archiver_csc`
+    scoreboard : `lsst.dm.csc.base.scoreboard`
+    """
     def __init__(self, evt, parent, scoreboard):
         self.evt = evt
         self.evt.clear()
@@ -29,6 +37,12 @@ class Watcher:
         self.scoreboard = scoreboard
 
     async def peek(self, forwarder_key, seconds_until_next_peek):
+        """Check to see if a Forwarder is still alive
+        Parameters
+        ----------
+        forwarder_key : `string`
+        seconds_until_next_peek : `int`
+        """
         while True:
             if self.evt.is_set():  # if this is set, we were asked to shut down.
                 return

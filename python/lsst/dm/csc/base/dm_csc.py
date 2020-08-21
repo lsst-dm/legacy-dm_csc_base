@@ -21,15 +21,30 @@
 
 import asyncio
 import logging
-import os.path
-import traceback
 from lsst.ts.salobj import State
 from lsst.ts.salobj import ConfigurableCsc
 
 LOGGER = logging.getLogger(__name__)
 
 
-class dm_csc(ConfigurableCsc):
+class DmCSC(ConfigurableCsc):
+    """This object implements configuration and the state transition model for the ConfigurableCSC
+
+    Parameters
+    ----------
+    name : `str`
+        name of this csc
+    index : `int`
+        csc index value
+    schema_path : `str`
+        path to the schema file
+    config_dir : `str`
+        configuration directory
+    initial_state : `int`
+        initial state of the CSC
+    initial_simulation_mode : bool
+        simulation mode flag
+    """
     def __init__(self, name, index, schema_path, config_dir, initial_state, initial_simulation_mode):
         super().__init__(name, index=index, schema_path=schema_path, config_dir=config_dir,
                          initial_state=initial_state, initial_simulation_mode=initial_simulation_mode)
@@ -39,7 +54,6 @@ class dm_csc(ConfigurableCsc):
             State.FAULT: "fault",
             State.OFFLINE: "offline",
             State.STANDBY: "standby"}
-
 
     async def configure(self, config):
         """Configure this CSC and output the ``settingsApplied`` event.
@@ -61,6 +75,8 @@ class dm_csc(ConfigurableCsc):
         )
 
     def report_summary_state(self):
+        """State transition model for the ArchiverCSC
+        """
         super().report_summary_state()
 
         s_cur = None
@@ -96,7 +112,6 @@ class dm_csc(ConfigurableCsc):
             asyncio.ensure_future(self.stop_services())
             self.current_state = State.STANDBY
             return
-
 
         # if going from STANDBY to FAULT, kill any external services that started
         if (self.current_state == State.STANDBY) and (self.summary_state == State.FAULT):
@@ -135,9 +150,21 @@ class dm_csc(ConfigurableCsc):
             return
 
     def call_fault(self, code, report):
+        """Called when a fault in the CSC is detected
+
+        This is called by lower level methods when anything happens that the CSC detects as a fault,
+        and reports it via the ts_salobj reporting code.
+
+        Parameters
+        ----------
+        code : `int`
+            error code
+        report : `str`
+            description of the fault to report
+        """
+        # this safeguard is in place so that if multiple faults occur, fault is only reported one time.
         if self.transitioning_to_fault_evt.is_set():
             return
         self.transitioning_to_fault_evt.set()
         LOGGER.info(report)
         self.fault(code, report)
-

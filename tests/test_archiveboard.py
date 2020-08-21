@@ -18,24 +18,22 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-import os
-import unittest
 import asynctest
 
-import lsst.utils.tests
 from lsst.dm.csc.base.archiveboard import Archiveboard
 from lsst.dm.csc.base.forwarder_info import ForwarderInfo
+
 
 class ArchiveboardTestCase(asynctest.TestCase):
 
     def test_archiveboard(self):
         ab = Archiveboard("AT", 1, "localhost")
         ab.conn.delete('forwarder_list')
-        
+
         ab.set_jobnum('123')
         s = ab.get_jobnum()
         self.assertEqual(s, '123')
-        
+
         info1 = ForwarderInfo("localhost", "127.0.0.1", None)
         ab.push_forwarder_onto_list(info1)
         info2 = ab.pop_forwarder_from_list()
@@ -44,7 +42,7 @@ class ArchiveboardTestCase(asynctest.TestCase):
         self.assertEqual(info1.consume_queue, info2.consume_queue)
 
         with self.assertRaises(RuntimeError):
-            info3 = ab.pop_forwarder_from_list()
+            ab.pop_forwarder_from_list()
 
         ab.set_paired_forwarder_info(info1, 10)
         info4 = ab.get_paired_forwarder_info()
