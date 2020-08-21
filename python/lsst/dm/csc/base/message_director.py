@@ -637,7 +637,7 @@ class MessageDirector(Director):
 
         Parameters
         ----------
-        msg : `dict`
+        msg : `salobj.DataType`
             Contents of the endReadout CSC message
         """
         ack_id = await self.get_next_ack_id()
@@ -665,7 +665,11 @@ class MessageDirector(Director):
     #
     async def transmit_largeFileObjectAvailable(self, msg):
         """transmit largeFileObjectAvailable to the forwarder
-        @param data: the contents of the largeFileObjectAvailable CSC message
+
+        Parameters
+        ----------
+        msg: `salobj.DataType` 
+            the contents of the largeFileObjectAvailable CSC message
         """
         ack_id = await self.get_next_ack_id()
         m = self.build_largeFileObjectAvailable_message(ack_id, msg)
