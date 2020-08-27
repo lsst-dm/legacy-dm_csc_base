@@ -21,6 +21,17 @@
 
 
 class ForwarderInfo:
+    """Representation of information about a Forwarder
+
+    Parameters
+    ----------
+    hostname : `str`
+        host where the Forwarder service is running
+    ip_address : `str`
+        IP address of the forwarder
+    consume_queue : `str`
+        RabbitMQ queue where the Forwarder service listens for incoming messages
+    """
 
     def __init__(self, hostname, ip_address, consume_queue):
         self.hostname = hostname

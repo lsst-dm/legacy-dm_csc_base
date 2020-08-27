@@ -29,6 +29,18 @@ LOGGER = logging.getLogger(__name__)
 
 
 class Publisher(object):
+    """RabbitMQ publisher
+
+    Parameters
+    ----------
+    amqp_url : `str`
+        Broker url
+    csc_parent : `lsst.dm.csc.base.dm_csc`
+        CSC service using this publisher
+    logger_level : `int`
+        log level
+
+    """
 
     def __init__(self, amqp_url, csc_parent=None, logger_level=LOGGER.info):
 

@@ -24,7 +24,6 @@ import logging
 from logging.handlers import RotatingFileHandler
 import os
 import os.path
-import signal
 import sys
 import time
 import yaml
@@ -33,16 +32,32 @@ from lsst.dm.csc.base.Credentials import Credentials
 LOGGER = logging.getLogger(__name__)
 
 
-class base:
-    """Base class"""
+class Base:
+    """Base class which sets up logging, configuration and credentials
 
-    def __init__(self, name, filename, log_filename):
+    Parameters
+    ----------
+        name : `str`
+            name of device
+        config_filename : `str`
+            YAML configuration file name
+        log_filename : `str`
+            file name to which logging messages will be sent
+    """
+
+    def __init__(self, name, config_filename, log_filename):
         self._name = name
-        self._config = self.loadConfigFile(filename)
+        self._config = self.loadConfigFile(config_filename)
         self.setupLogging(log_filename)
         self._cred = Credentials('iip_cred.yaml')
 
     def getName(self):
+        """Get the device name
+
+        Returns
+        -------
+        The name of this service
+        """
         return self._name
 
     def loadConfigFile(self, filename):
@@ -50,6 +65,15 @@ class base:
         default location is $CTRL_IIP_DIR/etc/config.  If the environment
         variable $IIP_CONFIG_DIR exists, files are loaded from that location
         instead.
+
+        Parameters
+        ----------
+        filename : `str`
+            The YAML configuration filename
+
+        Returns
+        -------
+        A dict containing the configuration file information
         """
 
         config_file = filename
@@ -84,18 +108,32 @@ class base:
         return config
 
     def getCredentials(self):
+        """Get the credential information
+
+        Returns
+        -------
+        A dict containing credential information
+        """
         return self._cred
 
     def getConfiguration(self):
+        """Get the configuration information
+
+        Returns
+        -------
+        A dict containing configuration information
+        """
         return self._config
 
     def setupLogging(self, filename):
         """Setup writing to a log. If the IIP_LOG_DIR environment variable
         is set, use that.  Otherwise, use log_dir_location if it was
         specified. If it wasn't, default to /tmp.
-        Params
-        ------
-        filename:  the log file to write to
+
+        Parameters
+        -----------
+        filename : `str`
+            the log file to write to
         """
 
         log_dir_location = self._config['ROOT'].get('LOGGING_DIR', None)
@@ -110,24 +148,29 @@ class base:
             else:
                 log_dir = None
 
-        FORMAT = ('%(levelname) -10s %(asctime)s.%(msecs)03dZ %(name) -30s %(funcName) -35s %(lineno) -5d: %(message)s')
+        f = '%(levelname) -10s %(asctime)s.%(msecs)03dZ %(name) -30s %(funcName) '
+        f = f + '-35s %(lineno) -5d: %(message)s'
+        FORMAT = (f)
         LOGGER = logging.getLogger(__name__)
         logging.Formatter.converter = time.gmtime
         LOGGER.setLevel(logging.DEBUG)
 
         if log_dir is None:
-            # if we're here, there was no LOGGING_DIR entry in the config file, 
+            # if we're here, there was no LOGGING_DIR entry in the config file,
             # and IIP_LOG_DIR hasn't been set.  Therefore, write to stdout.
             handler = logging.StreamHandler(sys.stdout)
-            LOGGER.addHandler(handler) 
+            LOGGER.addHandler(handler)
             logging.basicConfig(level=logging.INFO, format=FORMAT, datefmt="%Y-%m-%d %H:%M:%S")
-        else: 
-            # if we're here, either LOGGING_DIR was set, or IIP_LOG_DIR was set, so write files to 
+        else:
+            # if we're here, either LOGGING_DIR was set, or IIP_LOG_DIR was set, so write files to
             # the directory that was indicated.
             log_file = os.path.join(log_dir, filename)
             handler = RotatingFileHandler(log_file, maxBytes=2000000, backupCount=10)
             LOGGER.addHandler(handler)
-            logging.basicConfig(filename=log_file, level=logging.INFO, format=FORMAT, datefmt="%Y-%m-%d %H:%M:%S")
+            logging.basicConfig(filename=log_file, level=logging.INFO, format=FORMAT,
+                                datefmt="%Y-%m-%d %H:%M:%S")
 
     def shutdown(self):
+        """Shutdown all services
+        """
         pass

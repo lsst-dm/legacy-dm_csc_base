@@ -19,28 +19,57 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import asyncio
 import logging
-import pathlib
-from lsst.dm.csc.base.dm_csc import dm_csc
+from lsst.dm.csc.base.dm_csc import DmCSC
 from lsst.ts import salobj
-from lsst.ts.salobj import State
 
 LOGGER = logging.getLogger(__name__)
 
 
-class ArchiverCSC(dm_csc):
+class ArchiverCSC(DmCSC):
+    """
+    """
 
     def __init__(self, name, index, config_dir=None, initial_state=salobj.State.STANDBY, initial_simulation_mode=0):
         super().__init__(name, index=index, config_dir=config_dir, initial_state=initial_state, initial_simulation_mode=initial_simulation_mode)
 
-    async def send_imageRetrievalForArchiving(self, camera, obsid, raft, sensor, archiverName):
-        LOGGER.info(f"sending camera={camera} obsid={obsid} raft={raft} sensor={sensor}  archiverName={archiverName}")
-        self.evt_imageRetrievalForArchiving.set_put(camera=camera, obsid=obsid, raft=raft, sensor=sensor, archiverName=archiverName)
+    async def send_imageRetrievalForArchiving(self, camera, archiverName, dictionary):
+        """
+        """
+        obsid = dictionary['OBSID']
+        raft = "undef"
+        if 'RAFT' in dictionary:
+            raft = dictionary['RAFT']
+        sensor = "undef"
+        if 'SENSOR' in dictionary:
+            sensor = dictionary['SENSOR']
+        statusCode = dictionary['STATUS_CODE']
+        description = dictionary['DESCRIPTION']
+        s = f'sending camera={camera} obsid={obsid} raft={raft} sensor={sensor}  '
+        s = s + f'archiverName={archiverName}, statusCode={statusCode}, description={description}'
+        LOGGER.info(s)
+        self.evt_imageRetrievalForArchiving.set_put(camera=camera, obsid=obsid, raft=raft,
+                                                    sensor=sensor, archiverName=archiverName,
+                                                    statusCode=statusCode, description=description)
 
-    async def send_imageInOODS(self, camera, obsid, raft, sensor, archiverName, statusCode, description):
-        LOGGER.info(f"sending {camera} {obsid} {raft} {sensor} {archiverName} {statusCode}: {description}")
+    async def send_imageInOODS(self, dictionary):
+        """
+        """
+        camera = dictionary['CAMERA']
+        archiverName = dictionary['ARCHIVER']
+        obsid = dictionary['OBSID']
+        raft = "undef"
+        if 'RAFT' in dictionary:
+            raft = dictionary['RAFT']
+        sensor = "undef"
+        if 'SENSOR' in dictionary:
+            sensor = dictionary['SENSOR']
+        statusCode = dictionary['STATUS_CODE']
+        description = dictionary['DESCRIPTION']
 
+        s = f'sending camera={camera} obsid={obsid} raft={raft} sensor={sensor} '
+        s = s + f'archiverName={archiverName}, statusCode={statusCode}, description={description}'
+        LOGGER.info(s)
         self.evt_imageInOODS.set_put(camera=camera,
                                      obsid=obsid,
                                      raft=raft,
@@ -50,26 +79,40 @@ class ArchiverCSC(dm_csc):
                                      description=description)
 
     async def start_services(self):
+        """Start all support services
+        """
         await self.director.start_services()
 
     async def stop_services(self):
+        """Stop all support services
+        """
         await self.director.stop_services()
 
     async def do_resetFromFault(self, data):
-        print("do_resetFromFault called")
-        print(data)
+        """resetFromFault. Required by ts_salobj csc
+        """
+        print(f"do_resetFromFault called: {data}")
 
     async def startIntegrationCallback(self, data):
+        """Send the startIntegration message to the Forwarder
+        """
         self.assert_enabled("startIntegration")
         LOGGER.info("startIntegration callback")
+        # message actually sent by the director
         await self.director.transmit_startIntegration(data)
 
     async def endReadoutCallback(self, data):
+        """Send the endReadout message to the Forwarder
+        """
         self.assert_enabled("endReadout")
         LOGGER.info("endReadout")
+        # message actually sent by the director
         await self.director.transmit_endReadout(data)
 
     async def largeFileObjectAvailableCallback(self, data):
+        """Send the largeFileObjectAvailable  message to the Forwarder
+        """
         self.assert_enabled("largeFileObjectAvailable")
         LOGGER.info("largeFileObjectAvailable")
+        # message actually sent by the director
         await self.director.transmit_largeFileObjectAvailable(data)

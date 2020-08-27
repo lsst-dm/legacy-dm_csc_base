@@ -18,19 +18,17 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-import os
-import unittest
 import asynctest
 
-import lsst.utils.tests
 from lsst.dm.csc.base.YamlHandler import YamlHandler
+
 
 class YamlHandlerTestCase(asynctest.TestCase):
 
     def test_encode(self):
         handler = YamlHandler(None)
 
-        d = { "foo1": "bar1", "foo2": "bar2" }
+        d = {"foo1": "bar1", "foo2": "bar2"}
 
         s = handler.encode_message(d)
         self.assertEqual(s, 'foo1: bar1\nfoo2: bar2\n')

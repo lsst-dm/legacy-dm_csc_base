@@ -21,24 +21,40 @@
 
 import asyncio
 import logging
-import os.path
-import traceback
 from lsst.ts.salobj import State
 from lsst.ts.salobj import BaseCsc
 
 LOGGER = logging.getLogger(__name__)
 
 
-class dm_csc(BaseCsc):
+class DmCSC(ConfigurableCsc):
+    """This object implements configuration and the state transition model for the ConfigurableCSC
+
+    Parameters
+    ----------
+    name : `str`
+        name of this csc
+    index : `int`
+        csc index value
+    schema_path : `str`
+        path to the schema file
+    config_dir : `str`
+        configuration directory
+    initial_state : `int`
+        initial state of the CSC
+    initial_simulation_mode : bool
+        simulation mode flag
+    """
+
     def __init__(self, name, index, config_dir, initial_state, initial_simulation_mode):
         super().__init__(name, index=index, config_dir=config_dir, initial_state=initial_state, initial_simulation_mode=initial_simulation_mode)
+
         self.state_to_str = {
             State.DISABLED: "disabled",
             State.ENABLED: "enabled",
             State.FAULT: "fault",
             State.OFFLINE: "offline",
             State.STANDBY: "standby"}
-
 
     async def configure(self, config):
         """Configure this CSC and output the ``settingsApplied`` event.
@@ -59,28 +75,9 @@ class dm_csc(BaseCsc):
 
         )
 
-    # this assumes a file name of the type:
-    # "CC_O_20200407_000004-R22S00.fits"
-    # note:
-    # everything to the left of "-" is obsid
-    # Raft is specified by Rnn
-    # Sensor is specified Snn
-    #
-    def extract_filename_info(self, filename):
-        name = os.path.basename(filename)
-        id_info = name.split("-")
-        if len(id_info) != 2:
-            raise Exception("bad filename format")
-        obsid = id_info[0]
-        value = id_info[1].split(".")
-        if len(value) != 2:
-            raise Exception("bad filename format")
-        raft_sensor = value[0]
-        raft = raft_sensor[1:3]
-        sensor = raft_sensor[4:7]
-        return obsid, raft, sensor
-    
     def report_summary_state(self):
+        """State transition model for the ArchiverCSC
+        """
         super().report_summary_state()
 
         s_cur = None
@@ -116,7 +113,6 @@ class dm_csc(BaseCsc):
             asyncio.ensure_future(self.stop_services())
             self.current_state = State.STANDBY
             return
-
 
         # if going from STANDBY to FAULT, kill any external services that started
         if (self.current_state == State.STANDBY) and (self.summary_state == State.FAULT):
@@ -155,9 +151,21 @@ class dm_csc(BaseCsc):
             return
 
     def call_fault(self, code, report):
+        """Called when a fault in the CSC is detected
+
+        This is called by lower level methods when anything happens that the CSC detects as a fault,
+        and reports it via the ts_salobj reporting code.
+
+        Parameters
+        ----------
+        code : `int`
+            error code
+        report : `str`
+            description of the fault to report
+        """
+        # this safeguard is in place so that if multiple faults occur, fault is only reported one time.
         if self.transitioning_to_fault_evt.is_set():
             return
         self.transitioning_to_fault_evt.set()
         LOGGER.info(report)
         self.fault(code, report)
-
