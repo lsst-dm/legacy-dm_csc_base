@@ -27,7 +27,7 @@ from lsst.ts.salobj import BaseCsc
 LOGGER = logging.getLogger(__name__)
 
 
-class DmCSC(ConfigurableCsc):
+class DmCSC(BaseCsc):
     """This object implements configuration and the state transition model for the ConfigurableCSC
 
     Parameters
@@ -36,18 +36,12 @@ class DmCSC(ConfigurableCsc):
         name of this csc
     index : `int`
         csc index value
-    schema_path : `str`
-        path to the schema file
-    config_dir : `str`
-        configuration directory
     initial_state : `int`
         initial state of the CSC
-    initial_simulation_mode : bool
-        simulation mode flag
     """
 
-    def __init__(self, name, index, config_dir, initial_state, initial_simulation_mode):
-        super().__init__(name, index=index, config_dir=config_dir, initial_state=initial_state, initial_simulation_mode=initial_simulation_mode)
+    def __init__(self, name, index, initial_state):
+        super().__init__(name, index=index, initial_state=initial_state)
 
         self.state_to_str = {
             State.DISABLED: "disabled",

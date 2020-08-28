@@ -27,24 +27,44 @@ LOGGER = logging.getLogger(__name__)
 
 
 class ArchiverCSC(DmCSC):
-    """
+    """Base class used for Archiver Commandable SAL Components (CSC)
+
+    Parameters
+    ----------
+    name : `str`
+        Name of SAL component.
+    index : `int` or `None`
+        SAL component index, or 0 or None if the component is not indexed.
+    initial_state : `State` or `int`, optional
+        The initial state of the CSC. This is provided for unit testing,
+        as real CSCs should start up in `State.STANDBY`, the default.
+
     """
 
-    def __init__(self, name, index, config_dir=None, initial_state=salobj.State.STANDBY, initial_simulation_mode=0):
-        super().__init__(name, index=index, config_dir=config_dir, initial_state=initial_state, initial_simulation_mode=initial_simulation_mode)
+    def __init__(self, name, index, initial_state=salobj.State.STANDBY):
+        super().__init__(name, index=index, initial_state=initial_state)
 
-    async def send_imageRetrievalForArchiving(self, camera, archiverName, dictionary):
+    async def send_imageRetrievalForArchiving(self, camera, archiverName, info):
+        """Send SAL message indicating that an image has been retrieved for archiving
+    
+        Parameters
+        ----------
+        camera : `str`
+            Name of the camera from which the image came
+        archiverName : `str`
+            Name of this archiver
+        info : `dict`
+            information about the image
         """
-        """
-        obsid = dictionary['OBSID']
+        obsid = info['OBSID']
         raft = "undef"
-        if 'RAFT' in dictionary:
-            raft = dictionary['RAFT']
+        if 'RAFT' in info:
+            raft = info['RAFT']
         sensor = "undef"
-        if 'SENSOR' in dictionary:
-            sensor = dictionary['SENSOR']
-        statusCode = dictionary['STATUS_CODE']
-        description = dictionary['DESCRIPTION']
+        if 'SENSOR' in info:
+            sensor = info['SENSOR']
+        statusCode = info['STATUS_CODE']
+        description = info['DESCRIPTION']
         s = f'sending camera={camera} obsid={obsid} raft={raft} sensor={sensor}  '
         s = s + f'archiverName={archiverName}, statusCode={statusCode}, description={description}'
         LOGGER.info(s)
@@ -52,20 +72,25 @@ class ArchiverCSC(DmCSC):
                                                     sensor=sensor, archiverName=archiverName,
                                                     statusCode=statusCode, description=description)
 
-    async def send_imageInOODS(self, dictionary):
+    async def send_imageInOODS(self, info):
+        """Send SAL message that the images has been ingested into the OODS
+
+        Parameters
+        ----------
+        info : `dict`
+            information about the image
         """
-        """
-        camera = dictionary['CAMERA']
-        archiverName = dictionary['ARCHIVER']
-        obsid = dictionary['OBSID']
+        camera = info['CAMERA']
+        archiverName = info['ARCHIVER']
+        obsid = info['OBSID']
         raft = "undef"
-        if 'RAFT' in dictionary:
-            raft = dictionary['RAFT']
+        if 'RAFT' in info:
+            raft = info['RAFT']
         sensor = "undef"
-        if 'SENSOR' in dictionary:
-            sensor = dictionary['SENSOR']
-        statusCode = dictionary['STATUS_CODE']
-        description = dictionary['DESCRIPTION']
+        if 'SENSOR' in info:
+            sensor = info['SENSOR']
+        statusCode = info['STATUS_CODE']
+        description = info['DESCRIPTION']
 
         s = f'sending camera={camera} obsid={obsid} raft={raft} sensor={sensor} '
         s = s + f'archiverName={archiverName}, statusCode={statusCode}, description={description}'
