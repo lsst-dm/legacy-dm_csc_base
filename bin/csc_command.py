@@ -29,11 +29,10 @@ from lsst.ts import salobj
 
 class Commander:
 
-    def __init__(self, device_name, command, timeout, settings):
+    def __init__(self, device_name, command, timeout):
         self.device_name = device_name
         self.command = command
         self.timeout = timeout
-        self.settings = settings
 
     async def run_command(self):
         async with salobj.Domain() as domain:
@@ -41,11 +40,8 @@ class Commander:
             await arc.start_task
 
             try:
-                if self.command == "start":
-                    await arc.cmd_start.set_start(settingsToApply=self.settings, timeout=self.timeout)
-                else:
-                    cmd = getattr(arc, f"cmd_{self.command}")
-                    await cmd.set_start(timeout=self.timeout)
+                cmd = getattr(arc, f"cmd_{self.command}")
+                await cmd.set_start(timeout=self.timeout)
             except Exception as e:
                 print(e)
 
@@ -60,18 +56,11 @@ if __name__ == "__main__":
 
     subparsers = parser.add_subparsers(dest="command")
 
-    start_parser = subparsers.add_parser('start')
-    start_parser.add_argument('-s', '--settings', dest="settings", required=True, help="setting to apply")
-
-    cmds = ['enable', 'disable', 'enterControl', 'exitControl', 'standby', 'abort', 'resetFromFault']
+    cmds = ['start', 'enable', 'disable', 'enterControl', 'exitControl', 'standby', 'abort', 'resetFromFault']
     for x in cmds:
         p = subparsers.add_parser(x)
 
     args = parser.parse_args()
 
-    settings = None
-    if args.command == "start":
-        settings = args.settings
-
-    cmdr = Commander(args.device, args.command, args.timeout, settings)
+    cmdr = Commander(args.device, args.command, args.timeout)
     asyncio.run(cmdr.run_command())
