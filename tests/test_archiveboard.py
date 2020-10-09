@@ -27,7 +27,7 @@ from lsst.dm.csc.base.forwarder_info import ForwarderInfo
 class ArchiveboardTestCase(asynctest.TestCase):
 
     def test_archiveboard(self):
-        ab = Archiveboard("AT", 1, "localhost")
+        ab = Archiveboard("AT", 1, "localhost", key="AT_association")
         ab.conn.delete('forwarder_list')
 
         ab.set_jobnum('123')

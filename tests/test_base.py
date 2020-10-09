@@ -22,7 +22,7 @@ import os
 import asynctest
 
 import lsst.utils.tests
-from lsst.dm.csc.base.base import base
+from lsst.dm.csc.base.base import Base
 
 
 class BaseTestCase(asynctest.TestCase):
@@ -34,7 +34,7 @@ class BaseTestCase(asynctest.TestCase):
         logname = f"test_{os.getpid()}_cred.log"
         os.environ["IIP_CONFIG_DIR"] = os.path.join(self.loc, "files", "etc", "config")
         os.environ["IIP_CREDENTIAL_DIR"] = os.path.join(self.loc, "files")
-        b = base("test", "config.yaml", logname)
+        b = Base("test", "config.yaml", logname)
         os.unlink(os.path.join("/tmp", logname))
 
         self.assertEqual(b.getName(), "test")
@@ -46,7 +46,7 @@ class BaseTestCase(asynctest.TestCase):
         logname = f"test_{os.getpid()}_config.log"
         os.environ["IIP_CONFIG_DIR"] = os.path.join(self.loc, "files", "etc", "config")
         os.environ["IIP_CREDENTIAL_DIR"] = os.path.join(self.loc, "files")
-        b = base("test", "config.yaml", logname)
+        b = Base("test", "config.yaml", logname)
         b.getConfiguration()
         b.shutdown()
         os.unlink(os.path.join("/tmp", logname))
@@ -57,7 +57,7 @@ class BaseTestCase(asynctest.TestCase):
         os.environ["IIP_CONFIG_DIR"] = os.path.join(package, "tests", "files", "etc", "config")
         os.environ["IIP_CREDENTIAL_DIR"] = os.path.join(package, "tests", "files")
         os.environ["IIP_LOG_DIR"] = "/tmp"
-        b = base("test", "config.yaml", logname)
+        b = Base("test", "config.yaml", logname)
         b.getConfiguration()
         os.unlink(os.path.join("/tmp", logname))
 
@@ -68,7 +68,7 @@ class BaseTestCase(asynctest.TestCase):
         os.environ["IIP_CREDENTIAL_DIR"] = os.path.join(package, "tests", "files")
         if "IIP_LOG_DIR" in os.environ:
             del os.environ["IIP_LOG_DIR"]
-        b = base("test", "nologconfig.yaml", logname)
+        b = Base("test", "nologconfig.yaml", logname)
         b.getConfiguration()
 
     def test_bad_config(self):
@@ -76,7 +76,7 @@ class BaseTestCase(asynctest.TestCase):
         package = lsst.utils.getPackageDir("dm_csc_base")
         os.environ["test_DIR"] = os.path.join(package, "tests", "files")
         os.environ["IIP_CREDENTIAL_DIR"] = os.path.join(package, "tests", "files")
-        base("test", "config.yaml", logname)
+        Base("test", "config.yaml", logname)
         os.unlink(os.path.join("/tmp", logname))
 
     def test_not_defined(self):
@@ -87,7 +87,7 @@ class BaseTestCase(asynctest.TestCase):
         if "test_DIR" in os.environ:
             del os.environ["test_DIR"]
         with self.assertRaises(Exception):
-            base("test", "config.yaml", logname)
+            Base("test", "config.yaml", logname)
 
     def test_bad_cred_dir(self):
         logname = f"test_{os.getpid()}_badconfig.log"
@@ -95,7 +95,7 @@ class BaseTestCase(asynctest.TestCase):
         os.environ["test_DIR"] = os.path.join(package, "tests", "files")
         os.environ["IIP_CREDENTIAL_DIR"] = os.path.join(package, "tests", "files", "baddir")
         with self.assertRaises(PermissionError):
-            base("test", "config.yaml", logname)
+            Base("test", "config.yaml", logname)
         os.unlink(os.path.join("/tmp", logname))
 
     def test_missing_config(self):
@@ -104,4 +104,4 @@ class BaseTestCase(asynctest.TestCase):
         os.environ["IIP_CONFIG_DIR"] = os.path.join(package, "tests", "files", "etc", "config")
         os.environ["IIP_CREDENTIAL_DIR"] = os.path.join(package, "tests", "files")
         with self.assertRaises(FileNotFoundError):
-            base("test", "missing_config.yaml", logname)
+            Base("test", "missing_config.yaml", logname)

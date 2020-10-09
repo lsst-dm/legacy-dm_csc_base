@@ -46,7 +46,7 @@ class ArchiverCSC(DmCSC):
 
     async def send_imageRetrievalForArchiving(self, camera, archiverName, info):
         """Send SAL message indicating that an image has been retrieved for archiving
-    
+
         Parameters
         ----------
         camera : `str`

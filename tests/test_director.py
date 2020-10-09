@@ -39,7 +39,7 @@ class DirectorTestCase(asynctest.TestCase):
         evt2 = await d.retrieve_event("id1")
         self.assertEqual(evt1, evt2)
 
-        evt3 = await d.clear_event("id2")
+        evt3 = await d.create_event("id2")
         self.assertFalse(evt3.is_set())
 
         evt4 = await d.clear_event("id3")
