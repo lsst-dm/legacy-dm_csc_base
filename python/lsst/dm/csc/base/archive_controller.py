@@ -48,6 +48,7 @@ class ArchiveController(Base):
     """
     def __init__(self, name, config_filename, log_filename):
         super().__init__(name, config_filename, log_filename)
+        self._msg_actions = {}
 
     async def configure(self):
         """Configure the archive controller
@@ -121,7 +122,7 @@ class ArchiveController(Base):
         """
         for directory in dir_list:
             if directory is not None:
-                os.makedirs(os.path.dirname(directory), exist_ok=True)
+                os.makedirs(directory, exist_ok=True)
 
     async def setup_publishers(self):
         """Create all RabbitMQ message publishers
@@ -176,11 +177,14 @@ class ArchiveController(Base):
         body : `dict`
             Contains the contents of the message that was sent
         """
+        print(f"on_message: body = {body}")
         if 'MSG_TYPE' not in body:
             msg = f"received invalid message: {body}"
             LOGGER.warning(msg)
+            print(f"raising msg = {msg}")
             raise Exception(msg)
         msg_type = body['MSG_TYPE']
+        print(f"self._msg_actions = {self._msg_actions}")
         if msg_type not in self._msg_actions:
             msg = f"{msg_type} was not found in msg_action list"
             LOGGER.warning(msg)

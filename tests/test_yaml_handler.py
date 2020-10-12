@@ -19,13 +19,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import asynctest
+from datetime import time
 
 from lsst.dm.csc.base.YamlHandler import YamlHandler
 
 
 class YamlHandlerTestCase(asynctest.TestCase):
 
-    def test_encode(self):
+    def test_encode_decode(self):
         handler = YamlHandler(None)
 
         d = {"foo1": "bar1", "foo2": "bar2"}
@@ -36,3 +37,29 @@ class YamlHandlerTestCase(asynctest.TestCase):
         m = handler.decode_message(s)
         self.assertEqual(m["foo1"], "bar1")
         self.assertEqual(m["foo2"], "bar2")
+
+    def test_datetime(self):
+        handler = YamlHandler()
+        d = {"date": time(hour=9, minute=27, second=55)}
+
+        s = handler.encode_message(d)
+        m = handler.decode_message(s)
+
+        d2 = m["date"]
+        self.assertEqual(d2.hour, 9)
+        self.assertEqual(d2.minute, 27)
+        self.assertEqual(d2.second, 55)
+
+    def test_callback(self):
+        handler = YamlHandler(self.on_message)
+
+        d = {"foo1": "bar1", "foo2": "bar2"}
+
+        s = handler.encode_message(d)
+        self.assertEqual(s, 'foo1: bar1\nfoo2: bar2\n')
+
+        handler.yaml_callback(None, None, None, s)
+
+    def on_message(self, channel, basic_deliver, properties, body):
+        self.assertEqual(body["foo1"], "bar1")
+        self.assertEqual(body["foo2"], "bar2")

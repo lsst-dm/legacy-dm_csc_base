@@ -21,6 +21,8 @@
 import os
 import asynctest
 import asyncio
+import shutil
+import tempfile
 
 from lsst.dm.csc.base.archive_controller import ArchiveController
 
@@ -64,6 +66,10 @@ class ControllerTestCase(asynctest.TestCase):
         test3 = {'MSG_TYPE': 'test3'}
         self.controller._msg_actions = {'test3': self.action}
         self.controller.on_message(ch, method, None, test3)
+
+        test4 = {'MSG_TYPE': 'ARCHIVE_HEALTH_CHECK'}
+        self.controller._msg_actions = {'ARCHIVE_HEALTH_CHECK': self.action}
+        self.controller.on_message(ch, method, None, test4)
 
         await self.controller.stop_connections()
 
@@ -157,3 +163,11 @@ class ControllerTestCase(asynctest.TestCase):
         self.assertEqual(new_msg['DESCRIPTION'], 'description')
 
         await self.controller.stop_connections()
+
+    async def test_create_directories(self):
+        direct = tempfile.mkdtemp()
+        path = os.path.join(direct, "test")
+        self.controller.create_directories([path])
+        self.assertTrue(os.path.exists(path))
+        shutil.rmtree(direct)
+        self.controller.create_directories([None])

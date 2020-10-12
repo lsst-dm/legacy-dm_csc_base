@@ -20,6 +20,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import os
 import asynctest
+import yaml
 
 import lsst.utils.tests
 from lsst.dm.csc.base.Credentials import Credentials
@@ -44,7 +45,7 @@ class CredentialsTestCase(asynctest.TestCase):
         del os.environ["HOME"]
 
     def test_bad_permission_dir(self):
-        os.environ["IIP_CREDENTIAL_DIR"] = os.path.join(self.package, "tests", "files", "baddir")
+        os.environ["IIP_CREDENTIAL_DIR"] = os.path.join(self.package, "tests", "files", "badetc")
         with self.assertRaises(PermissionError):
             Credentials("iip_cred.yaml")
 
@@ -60,3 +61,7 @@ class CredentialsTestCase(asynctest.TestCase):
     def test_missing_credential_file(self):
         with self.assertRaises(FileNotFoundError):
             Credentials("nonexistant.yaml")
+
+    def test_bad_yaml_file(self):
+        with self.assertRaises(yaml.YAMLError):
+            Credentials("bad_yaml_file.yaml")

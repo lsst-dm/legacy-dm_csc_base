@@ -44,6 +44,10 @@ class DirectorTestCase(asynctest.TestCase):
 
         evt4 = await d.clear_event("id3")
         self.assertIsNone(evt4)
+
+        evt5 = await d.create_event("id5")
+        evt6 = await d.clear_event("id5")
+        self.assertEqual(evt5, evt6)
         os.unlink(os.path.join("/tmp", logname))
 
     async def test_ack_id(self):
