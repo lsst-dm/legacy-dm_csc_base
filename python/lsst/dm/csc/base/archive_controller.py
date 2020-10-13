@@ -177,14 +177,11 @@ class ArchiveController(Base):
         body : `dict`
             Contains the contents of the message that was sent
         """
-        print(f"on_message: body = {body}")
         if 'MSG_TYPE' not in body:
             msg = f"received invalid message: {body}"
             LOGGER.warning(msg)
-            print(f"raising msg = {msg}")
             raise Exception(msg)
         msg_type = body['MSG_TYPE']
-        print(f"self._msg_actions = {self._msg_actions}")
         if msg_type not in self._msg_actions:
             msg = f"{msg_type} was not found in msg_action list"
             LOGGER.warning(msg)
