@@ -86,7 +86,7 @@ class Credentials:
             mode = stat_info.st_mode
 
             # check that the permissions are set to rwx for only the user
-            if (mode & (stat.S_IWOTH | stat.S_IWGRP | stat.S_IROTH | stat.S_IRGRP)):
+            if (mode != (stat.S_IFDIR | stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)):
                 msg = "directory '%s' is unsecure. Run 'chmod 700 %s'." % (config_dir, config_dir)
                 print(msg)
                 LOGGER.info(msg)
@@ -97,7 +97,7 @@ class Credentials:
                 stat_info = os.stat(filename)
                 mode = stat_info.st_mode
                 # check that the credential file is set to rw for only the user
-                if (mode & (stat.S_IWOTH | stat.S_IWGRP | stat.S_IROTH | stat.S_IRGRP)):
+                if (mode != (stat.S_IFREG | stat.S_IRUSR | stat.S_IWUSR)):
                     msg = "file '%s' is unsecure.  Run 'chmod 600 %s'." % (filename, filename)
                     print(msg)
                     LOGGER.info(msg)
@@ -117,21 +117,16 @@ class Credentials:
             raise PermissionError(msg)
 
     def loadYamlFile(self, config_file):
-        try:
-            f = open(config_file)
-        except Exception:
-            msg = "Can't open %s" % config_file
-            print(msg)
-            LOGGER.info(msg)
-            raise PermissionError(msg)
+        f = open(config_file)
 
         config = None
         try:
             config = yaml.safe_load(f)
-        except Exception:
-            msg = "Error reading %s" % config_file
-            print(msg)
+        except yaml.YAMLError as exc:
+            msg = f"Error reading {config_file}"
             LOGGER.info(msg)
+            f.close()
+            raise yaml.YAMLError(msg) from exc
         finally:
             f.close()
         return config

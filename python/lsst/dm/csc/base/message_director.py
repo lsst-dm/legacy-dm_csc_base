@@ -668,7 +668,7 @@ class MessageDirector(Director):
 
         Parameters
         ----------
-        msg: `salobj.DataType` 
+        msg: `salobj.DataType`
             the contents of the largeFileObjectAvailable CSC message
         """
         ack_id = await self.get_next_ack_id()

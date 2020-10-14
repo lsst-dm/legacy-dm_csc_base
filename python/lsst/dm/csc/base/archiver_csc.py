@@ -41,12 +41,12 @@ class ArchiverCSC(DmCSC):
 
     """
 
-    def __init__(self, name, index, initial_state=salobj.State.STANDBY):
-        super().__init__(name, index=index, initial_state=initial_state)
+    def __init__(self, name, initial_state=salobj.State.STANDBY):
+        super().__init__(name, initial_state=initial_state)
 
     async def send_imageRetrievalForArchiving(self, camera, archiverName, info):
         """Send SAL message indicating that an image has been retrieved for archiving
-    
+
         Parameters
         ----------
         camera : `str`

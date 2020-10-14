@@ -23,6 +23,7 @@ import asyncio
 import logging
 from lsst.ts.salobj import State
 from lsst.ts.salobj import BaseCsc
+from . import __version__
 
 LOGGER = logging.getLogger(__name__)
 
@@ -40,8 +41,11 @@ class DmCSC(BaseCsc):
         initial state of the CSC
     """
 
-    def __init__(self, name, index, initial_state):
-        super().__init__(name, index=index, initial_state=initial_state)
+    valid_simulation_modes = [0]
+    version = __version__
+
+    def __init__(self, name, initial_state):
+        super().__init__(name, initial_state=initial_state)
 
         self.state_to_str = {
             State.DISABLED: "disabled",
@@ -61,13 +65,6 @@ class DmCSC(BaseCsc):
         self.config = config
         LOGGER.info("configuring")
         self.evt_settingsApplied.set_put(settingsVersion=self.config.settingsVersion)
-        self.evt_softwareVersions.set_put(
-            xmlVersion=self.config.xmlVersion,
-            salVersion=self.config.salVersion,
-            openSpliceVersion=self.config.openSpliceVersion,
-            cscVersion=self.config.cscVersion
-
-        )
 
     def report_summary_state(self):
         """State transition model for the ArchiverCSC
