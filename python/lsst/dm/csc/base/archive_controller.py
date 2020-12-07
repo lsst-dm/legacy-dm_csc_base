@@ -453,6 +453,10 @@ class ArchiveController(Base):
         d['CAMERA'] = self.camera_name
         d['ARCHIVER'] = self.archiver_name
         d['OBSID'] = msg['OBSID']
+        if 'RAFT' in msg:
+            d['RAFT'] = msg['RAFT']
+        if 'SENSOR' in msg:
+            d['SENSOR'] = msg['SENSOR']
         d['FILENAME'] = msg['FILENAME']
         return d
 
