@@ -354,8 +354,6 @@ class ArchiveController(Base):
             asyncio.create_task(self.send_oods_failure_message(msg, err))
             return
         # send an message to the OODS to ingest the file
-        LOGGER.info(f'1) incoming message is: {incoming_msg}')
-        LOGGER.info(f'2) msg is: {msg}')
         msg['FILENAME'] = oods_file
         asyncio.create_task(self.send_ingest_message_to_oods(msg))
 
