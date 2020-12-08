@@ -324,6 +324,8 @@ class ArchiveController(Base):
         d['FILENAME'] = incoming_msg['FILENAME']
         d['JOB_NUM'] = incoming_msg['JOB_NUM']
         d['SESSION_ID'] = incoming_msg['SESSION_ID']
+        d['RAFT'] = incoming_msg['RAFT']
+        d['SENSOR'] = incoming_msg['SENSOR']
         return d
 
     async def process_file_transfer_completed(self, incoming_msg):
@@ -338,6 +340,7 @@ class ArchiveController(Base):
         filename = incoming_msg['FILENAME']
         reply_queue = incoming_msg['REPLY_QUEUE']
         ack_msg = self.build_file_transfer_completed_ack(incoming_msg)
+        LOGGER.info(f'incoming message is: {incoming_msg}')
         LOGGER.info(ack_msg)
         await self.publisher.publish_message(reply_queue, ack_msg)
 
@@ -351,6 +354,8 @@ class ArchiveController(Base):
             asyncio.create_task(self.send_oods_failure_message(msg, err))
             return
         # send an message to the OODS to ingest the file
+        LOGGER.info(f'1) incoming message is: {incoming_msg}')
+        LOGGER.info(f'2) msg is: {msg}')
         msg['FILENAME'] = oods_file
         asyncio.create_task(self.send_ingest_message_to_oods(msg))
 
@@ -448,6 +453,7 @@ class ArchiveController(Base):
         -------
         Dictionary containing the message contents
         """
+        LOGGER.info(f'building file ingest request message using: {msg}')
         d = {}
         d['MSG_TYPE'] = f'{self.short_name}_FILE_INGEST_REQUEST'
         d['CAMERA'] = self.camera_name
@@ -482,4 +488,8 @@ class ArchiveController(Base):
         d['FILENAME'] = msg['FILENAME']
         d['STATUS_CODE'] = 1
         d['DESCRIPTION'] = description
+        if 'RAFT' in msg:
+            d['RAFT'] = msg['RAFT']
+        if 'SENSOR' in msg:
+            d['SENSOR'] = msg['SENSOR']
         return d
