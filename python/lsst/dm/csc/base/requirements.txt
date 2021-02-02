@@ -1,5 +1,4 @@
 attrs==17.4.0
-lxml==4.3.3
 more-itertools==4.1.0
 pika==1.0.1
 pluggy==0.6.0
