@@ -65,6 +65,7 @@ class DmCSC(BaseCsc):
         self.config = config
         LOGGER.info("configuring")
         self.evt_settingsApplied.set_put(settingsVersion=self.config.settingsVersion)
+        await self.evt_softwareVersions.set_put(cscVersion=self.version, subsystemVersions="")
 
     def report_summary_state(self):
         """State transition model for the ArchiverCSC
